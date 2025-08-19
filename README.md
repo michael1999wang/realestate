@@ -336,13 +336,25 @@ npm run test:integration
    # Wait for health checks
    ```
 
-2. **Events Not Processing**
+2. **Services Hanging or Not Responding**
+
+   If services become unresponsive or hang during development:
+
+   ```bash
+   # Force kill all ts-node processes
+   pkill -9 -f "ts-node"
+
+   # Then restart services
+   npm run dev:all
+   ```
+
+3. **Events Not Processing**
 
    - Check message bus configuration
    - Verify service startup order
    - Review debounce settings
 
-3. **Test Failures**
+4. **Test Failures**
    ```bash
    # Clean install
    npm run install:all

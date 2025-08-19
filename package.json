@@ -18,11 +18,13 @@
     "build:all": "cd ingestor && npm run build && cd ../enrichment && npm run build",
     "dev:ingestor": "cd ingestor && npm run dev",
     "dev:enrichment": "cd enrichment && npm run dev",
+    "dev:all": "npm run docker:up && sleep 5 && concurrently \"npm run dev:ingestor\" \"npm run dev:enrichment\"",
     "docker:up": "cd ingestor && docker compose up -d && cd ../enrichment && docker compose up -d",
     "docker:down": "cd ingestor && docker compose down && cd ../enrichment && docker compose down"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
+    "concurrently": "^8.2.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3"
   },
