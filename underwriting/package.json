@@ -1,0 +1,40 @@
+{
+  "name": "underwriting",
+  "version": "1.0.0",
+  "description": "Investment metrics computation service for real estate listings",
+  "main": "dist/bin/worker.js",
+  "scripts": {
+    "dev:worker": "ts-node src/bin/worker.ts",
+    "dev:api": "ts-node src/bin/api.ts",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "start:worker": "node dist/bin/worker.js",
+    "start:api": "node dist/bin/api.js"
+  },
+  "keywords": [
+    "real-estate",
+    "underwriting",
+    "investment",
+    "metrics"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.15.5",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "ioredis": "^5.3.0",
+    "pg": "^8.11.0",
+    "redis": "^4.6.0"
+  }
+}
