@@ -1,0 +1,30 @@
+{
+  "name": "@realestate/integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for real estate microservices",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "ts-node src/ingestor-enrichment.test.ts",
+    "test:all": "npm run test:integration",
+    "lint": "eslint src/**/*.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@realestate/enrichment": "file:../enrichment",
+    "@realestate/ingestor": "file:../ingestor"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2",
+    "eslint": "^8.55.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
