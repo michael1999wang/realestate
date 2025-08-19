@@ -1,0 +1,155 @@
+[
+  {
+    "MlsNumber": "C5123456",
+    "Status": "A",
+    "ListDate": "2024-01-15T08:00:00Z",
+    "Updated": "2024-01-15T08:00:00Z",
+    "Address": {
+      "StreetNumber": "123",
+      "StreetName": "Main Street",
+      "City": "Toronto",
+      "PostalCode": "M5V 3A8"
+    },
+    "Geo": {
+      "Latitude": 43.6426,
+      "Longitude": -79.3871
+    },
+    "PropertyType": "Condo Apartment",
+    "BedroomsTotal": 2,
+    "BathroomsTotalInteger": 2,
+    "LivingArea": 850,
+    "YearBuilt": 2018,
+    "ListPrice": 750000,
+    "TaxAnnualAmount": 4200,
+    "AssociationFee": 650,
+    "Media": [
+      { "MediaURL": "https://example.com/photo1.jpg" },
+      { "MediaURL": "https://example.com/photo2.jpg" }
+    ],
+    "ListOffice": {
+      "Name": "Premium Realty Inc.",
+      "Phone": "416-555-0123"
+    }
+  },
+  {
+    "MlsNumber": "W5654321",
+    "Status": "A",
+    "ListDate": "2024-01-14T10:30:00Z",
+    "Updated": "2024-01-16T14:22:00Z",
+    "Address": {
+      "StreetNumber": "456",
+      "StreetName": "Oak Avenue",
+      "City": "Mississauga",
+      "PostalCode": "L5B 2N4"
+    },
+    "Geo": {
+      "Latitude": 43.589,
+      "Longitude": -79.6441
+    },
+    "PropertyType": "Detached",
+    "BedroomsTotal": 4,
+    "BathroomsTotalInteger": 3,
+    "LivingArea": 2200,
+    "YearBuilt": 1995,
+    "ListPrice": 1250000,
+    "TaxAnnualAmount": 8500,
+    "Media": [
+      { "MediaURL": "https://example.com/house1.jpg" },
+      { "MediaURL": "https://example.com/house2.jpg" },
+      { "MediaURL": "https://example.com/house3.jpg" }
+    ],
+    "ListOffice": {
+      "Name": "West End Realty",
+      "Phone": "905-555-0456"
+    }
+  },
+  {
+    "MlsNumber": "E5789012",
+    "Status": "Sld",
+    "ListDate": "2024-01-10T09:15:00Z",
+    "Updated": "2024-01-17T16:45:00Z",
+    "Address": {
+      "StreetNumber": "789",
+      "StreetName": "Elm Street",
+      "City": "Scarborough",
+      "PostalCode": "M1P 4Y7"
+    },
+    "Geo": {
+      "Latitude": 43.7735,
+      "Longitude": -79.2315
+    },
+    "PropertyType": "Townhouse",
+    "BedroomsTotal": 3,
+    "BathroomsTotalInteger": 2,
+    "LivingArea": 1400,
+    "YearBuilt": 2010,
+    "ListPrice": 850000,
+    "TaxAnnualAmount": 5200,
+    "MaintenanceFee": 320,
+    "Media": [{ "MediaURL": "https://example.com/town1.jpg" }],
+    "ListOffice": {
+      "Name": "East Toronto Realty",
+      "Phone": "416-555-0789"
+    }
+  },
+  {
+    "MlsNumber": "N5345678",
+    "Status": "A",
+    "ListDate": "2024-01-18T11:00:00Z",
+    "Updated": "2024-01-18T11:00:00Z",
+    "Address": {
+      "StreetNumber": "321",
+      "StreetName": "Maple Road",
+      "City": "Richmond Hill",
+      "PostalCode": "L4C 1A2"
+    },
+    "Geo": {
+      "Latitude": 43.8828,
+      "Longitude": -79.4403
+    },
+    "PropertyType": "Semi-Detached",
+    "BedroomsTotal": 3,
+    "BathroomsTotalInteger": 3,
+    "LivingArea": 1800,
+    "YearBuilt": 2005,
+    "ListPrice": 980000,
+    "TaxAnnualAmount": 6800,
+    "Media": [
+      { "MediaURL": "https://example.com/semi1.jpg" },
+      { "MediaURL": "https://example.com/semi2.jpg" }
+    ],
+    "ListOffice": {
+      "Name": "North York Properties",
+      "Phone": "905-555-0321"
+    }
+  },
+  {
+    "MlsNumber": "C5987654",
+    "Status": "Sus",
+    "ListDate": "2024-01-12T07:45:00Z",
+    "Updated": "2024-01-19T13:30:00Z",
+    "Address": {
+      "StreetNumber": "654",
+      "StreetName": "Pine Street",
+      "City": "Toronto",
+      "PostalCode": "M4S 2H9"
+    },
+    "Geo": {
+      "Latitude": 43.7001,
+      "Longitude": -79.3977
+    },
+    "PropertyType": "Condo Apartment",
+    "BedroomsTotal": 1,
+    "BathroomsTotalInteger": 1,
+    "LivingArea": 580,
+    "YearBuilt": 2020,
+    "ListPrice": 620000,
+    "TaxAnnualAmount": 3100,
+    "AssociationFee": 580,
+    "Media": [{ "MediaURL": "https://example.com/condo1.jpg" }],
+    "ListOffice": {
+      "Name": "Downtown Living Realty",
+      "Phone": "416-555-0654"
+    }
+  }
+]
