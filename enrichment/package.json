@@ -19,13 +19,16 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "aws-sdk": "^2.1502.0",
     "pg": "^8.11.3",
-    "redis": "^4.6.12",
-    "aws-sdk": "^2.1502.0"
+    "redis": "^4.6.12"
   },
   "devDependencies": {
+    "@types/estree": "^1.0.8",
+    "@types/json-schema": "^7.0.15",
     "@types/node": "^20.10.4",
     "@types/pg": "^8.10.9",
+    "@types/semver": "^7.7.0",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",
     "eslint": "^8.55.0",

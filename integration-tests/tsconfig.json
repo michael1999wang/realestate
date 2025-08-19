@@ -19,5 +19,9 @@
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "../ingestor" }, { "path": "../enrichment" }]
+  "references": [
+    { "path": "../ingestor" },
+    { "path": "../enrichment" },
+    { "path": "../rent-estimator" }
+  ]
 }

@@ -174,7 +174,9 @@ export class RedisCache implements CachePort {
 
       // Parse memory usage from info string
       const memoryMatch = info.match(/used_memory_human:([^\r\n]+)/);
-      const memory = memoryMatch ? memoryMatch[1].trim() : "unknown";
+      const memory = memoryMatch
+        ? memoryMatch[1]?.trim() || "unknown"
+        : "unknown";
 
       return {
         connected: this.connected,

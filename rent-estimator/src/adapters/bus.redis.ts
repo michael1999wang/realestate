@@ -110,7 +110,10 @@ export class RedisBus implements BusPort {
     try {
       await this.connect();
 
-      const fields = Object.entries(event).flat().map(String);
+      const fields: Record<string, string> = {};
+      Object.entries(event).forEach(([key, value]) => {
+        fields[key] = String(value);
+      });
       await this.client.xAdd(streamName, "*", fields);
       console.log(`Added event to stream ${streamName}:`, event);
     } catch (error) {
@@ -156,14 +159,27 @@ export class RedisBus implements BusPort {
                   try {
                     // Convert Redis stream message to object
                     const event: any = {};
-                    for (let i = 0; i < message.message.length; i += 2) {
-                      const key = message.message[i];
-                      const value = message.message[i + 1];
-                      try {
-                        event[key] = JSON.parse(value);
-                      } catch {
-                        event[key] = value;
+                    if (Array.isArray(message.message)) {
+                      for (let i = 0; i < message.message.length; i += 2) {
+                        const key = message.message[i] as string;
+                        const value = message.message[i + 1] as string;
+                        try {
+                          event[key] = JSON.parse(value);
+                        } catch {
+                          event[key] = value;
+                        }
                       }
+                    } else {
+                      // Handle object format
+                      Object.entries(message.message).forEach(
+                        ([key, value]) => {
+                          try {
+                            event[key] = JSON.parse(value as string);
+                          } catch {
+                            event[key] = value;
+                          }
+                        }
+                      );
                     }
 
                     await handler(event);

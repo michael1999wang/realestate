@@ -182,19 +182,22 @@ describe("Complete Real Estate Pipeline - Simple Integration", () => {
       // Create enrichment data
       const enrichment = {
         listingId: ingestedListing.id,
+        listingVersion: 1,
+        enrichmentVersion: "1.0.0",
         geo: {
           lat: 43.6426,
           lng: -79.3871,
           fsa: "M5V",
+          source: "geocoded" as const,
         },
         rentPriors: {
           p25: 3000,
           p50: 3400,
           p75: 3800,
-          source: "cmhc",
+          source: "cmhc" as const,
           asOf: "2024-01-01",
         },
-        updatedAt: new Date().toISOString(),
+        computedAt: new Date().toISOString(),
       };
 
       await enrichmentRepo.upsert(enrichment);
@@ -279,15 +282,22 @@ describe("Complete Real Estate Pipeline - Simple Integration", () => {
 
       await enrichmentRepo.upsert({
         listingId: ingestedListing.id,
-        geo: { lat: 43.6426, lng: -79.3871, fsa: "M5V" },
+        listingVersion: 1,
+        enrichmentVersion: "1.0.0",
+        geo: {
+          lat: 43.6426,
+          lng: -79.3871,
+          fsa: "M5V",
+          source: "geocoded" as const,
+        },
         rentPriors: {
           p25: 2200,
           p50: 2500,
           p75: 2800,
-          source: "cmhc",
+          source: "cmhc" as const,
           asOf: "2024-01-01",
         },
-        updatedAt: new Date().toISOString(),
+        computedAt: new Date().toISOString(),
       });
     }
 

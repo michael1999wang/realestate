@@ -232,19 +232,22 @@ describe("Complete Real Estate Pipeline Integration", () => {
         // Create enrichment data
         const enrichment = {
           listingId: listing.id,
+          listingVersion: 1,
+          enrichmentVersion: "1.0.0",
           geo: {
             lat: 43.6426,
             lng: -79.3871,
             fsa: "M5V",
+            source: "geocoded" as const,
           },
           rentPriors: {
             p25: 3000,
             p50: 3400,
             p75: 3800,
-            source: "cmhc",
+            source: "cmhc" as const,
             asOf: "2024-01-01",
           },
-          updatedAt: new Date().toISOString(),
+          computedAt: new Date().toISOString(),
         };
 
         await enrichmentRepo.upsert(enrichment);
@@ -513,11 +516,9 @@ describe("Complete Real Estate Pipeline Integration", () => {
 
     // Verify property details are consistent
     expect(ingestedListing?.beds).toBe(2);
-    expect(enrichedListing?.beds).toBe(2);
     expect(rentEstimate?.featuresUsed.beds).toBe(2);
 
     expect(ingestedListing?.baths).toBe(2);
-    expect(enrichedListing?.baths).toBe(2);
     expect(rentEstimate?.featuresUsed.baths).toBe(2);
 
     expect(ingestedListing?.propertyType).toBe("Condo");

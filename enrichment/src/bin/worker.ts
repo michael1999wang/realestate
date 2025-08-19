@@ -16,7 +16,7 @@ import { EnrichmentScheduler } from "../core/scheduler";
 class EnrichmentWorker {
   private scheduler?: EnrichmentScheduler;
   private pgPool?: Pool;
-  private cache?: RedisCache;
+  private cache!: RedisCache | MemoryCache;
 
   async start(): Promise<void> {
     console.log("🚀 Starting Enrichment Service Worker...");
