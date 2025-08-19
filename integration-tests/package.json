@@ -7,13 +7,16 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "ts-node src/ingestor-enrichment.test.ts",
-    "test:all": "npm run test:integration",
+    "test:pipeline": "vitest run src/pipeline-simple.test.ts",
+    "test:pipeline-full": "vitest run src/ingestor-enrichment-rent.test.ts",
+    "test:all": "npm run test:integration && npm run test:pipeline",
     "lint": "eslint src/**/*.ts",
     "build": "tsc"
   },
   "dependencies": {
     "@realestate/enrichment": "file:../enrichment",
-    "@realestate/ingestor": "file:../ingestor"
+    "@realestate/ingestor": "file:../ingestor",
+    "@realestate/rent-estimator": "file:../rent-estimator"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",

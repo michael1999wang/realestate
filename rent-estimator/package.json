@@ -1,5 +1,5 @@
 {
-  "name": "rent-estimator",
+  "name": "@realestate/rent-estimator",
   "version": "1.0.0",
   "description": "Real estate rent estimation service",
   "main": "src/bin/worker.ts",
