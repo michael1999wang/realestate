@@ -2,8 +2,16 @@
  * Enrichment Service Configuration using BaseService template
  */
 
-import { MemoryCache } from "@realestate/shared-utils/cache";
-import { BaseService, ServiceConfig } from "@realestate/shared-utils/service";
+import {
+  BaseService,
+  BusinessLogic,
+  BusinessLogicBase,
+  BusPort,
+  Logger,
+  MemoryCache,
+  ServiceConfig,
+  UnderwriteRequestedEvent,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
 import { RedisCache } from "./adapters/cache.redis";
 import { CMHCAPI } from "./adapters/cmhc.api";
@@ -31,7 +39,7 @@ export interface EnrichmentEventMap {
  * Service dependencies
  */
 export interface EnrichmentDependencies {
-  bus: any;
+  bus: BusPort;
   cache: RedisCache | MemoryCache;
   db?: Pool;
   repositories: {
@@ -44,13 +52,16 @@ export interface EnrichmentDependencies {
     geocoder: GeocoderAPI;
     taxes: TaxesTable;
   };
-  logger: any;
+  logger: Logger;
 }
 
 /**
  * Business logic implementation
  */
-export class EnrichmentBusinessLogic {
+export class EnrichmentBusinessLogic extends BusinessLogicBase<
+  EnrichmentDependencies,
+  EnrichmentEventMap
+> {
   private processedListings = new Set<string>();
   private metrics = {
     eventsProcessed: 0,
@@ -60,7 +71,9 @@ export class EnrichmentBusinessLogic {
     errors: 0,
   };
 
-  constructor(private deps: EnrichmentDependencies) {}
+  constructor(deps: EnrichmentDependencies) {
+    super(deps);
+  }
 
   /**
    * Handle listing changed events
@@ -96,7 +109,9 @@ export class EnrichmentBusinessLogic {
       await this.deps.cache.set(cacheKey, Date.now().toString(), 60);
 
       // Get listing details
-      const listing = await this.deps.repositories.listing.findById(event.id);
+      const listing = await this.deps.repositories.listing.getListingById(
+        event.id
+      );
       if (!listing) {
         this.deps.logger.warn(
           `Listing ${event.id} not found, skipping enrichment`
@@ -121,12 +136,14 @@ export class EnrichmentBusinessLogic {
         this.metrics.enrichmentsChanged++;
 
         // Publish underwrite request if financial inputs changed significantly
-        if (
-          isDirtyFinancial ||
-          result.enrichmentChanged?.includes("rent_priors")
-        ) {
-          await this.deps.bus.publish("underwrite_requested", {
+        if (isDirtyFinancial) {
+          await this.deps.bus.publish<UnderwriteRequestedEvent>({
+            type: "underwrite_requested",
             id: event.id,
+            timestamp: new Date().toISOString(),
+            data: {
+              id: event.id,
+            },
           });
 
           this.metrics.underwriteRequestsPublished++;
@@ -141,7 +158,6 @@ export class EnrichmentBusinessLogic {
       const duration = Date.now() - startTime;
       this.deps.logger.info(`Enriched listing ${event.id}:`, {
         changed: result.changed,
-        enrichmentTypes: result.enrichmentChanged || [],
         durationMs: duration,
       });
     } catch (error) {
@@ -192,7 +208,7 @@ export const enrichmentServiceConfig: ServiceConfig<
   },
 
   cache: {
-    type: createServiceConfig().mode === "development" ? "memory" : "redis",
+    type: appCfg.mode === "development" ? "memory" : "redis",
   },
 
   subscriptions: [
@@ -209,9 +225,12 @@ export const enrichmentServiceConfig: ServiceConfig<
 
   publications: [{ topic: "underwrite_requested" }],
 
-  createBusinessLogic: (deps) => new EnrichmentBusinessLogic(deps),
+  createBusinessLogic: (deps: EnrichmentDependencies) =>
+    new EnrichmentBusinessLogic(
+      deps
+    ) as unknown as BusinessLogic<EnrichmentEventMap>,
 
-  createRepositories: (pool) => ({
+  createRepositories: (pool: Pool) => ({
     enrichment: new SQLEnrichmentRepo(pool),
     // TODO: Replace with actual listing repository
     listing: (() => {

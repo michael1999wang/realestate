@@ -10,16 +10,16 @@ describe("BaseService Template Integration", () => {
   it("should create and use shared memory bus", async () => {
     const bus = new MemoryBus("test-service");
 
-    let receivedEvent: any = null;
+    let receivedEvent: unknown = null;
 
     // Subscribe to an event
-    await bus.subscribe("test_event", async (event) => {
+    await bus.subscribe("test_event" as "listing_changed", async (event) => {
       receivedEvent = event;
     });
 
     // Publish an event
     await bus.publish({
-      type: "test_event",
+      type: "test_event" as "listing_changed",
       id: "test-123",
       timestamp: new Date().toISOString(),
       data: { message: "hello world" },
@@ -30,8 +30,9 @@ describe("BaseService Template Integration", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     expect(receivedEvent).toBeTruthy();
-    expect(receivedEvent.type).toBe("test_event");
-    expect(receivedEvent.data.message).toBe("hello world");
+    const event = receivedEvent as { type: string; data: { message: string } };
+    expect(event.type).toBe("test_event");
+    expect(event.data.message).toBe("hello world");
   });
 
   it("should work with memory cache", async () => {
@@ -57,28 +58,30 @@ describe("BaseService Template Integration", () => {
     let underwriteRequested = false;
 
     // Enrichment service simulation
-    await bus.subscribe("listing_changed", async (event: any) => {
+    await bus.subscribe("listing_changed", async (event) => {
       enrichmentProcessed = true;
 
       // Simulate enrichment work
-      await cache.set(`enriched:${event.data.id}`, { enriched: true }, 60);
+      const eventData = event as unknown as { data: { id: string } };
+      await cache.set(`enriched:${eventData.data.id}`, { enriched: true }, 60);
 
       // Publish underwrite request
       await bus.publish({
         type: "underwrite_requested",
         id: "req-" + Date.now(),
         timestamp: new Date().toISOString(),
-        data: { id: event.data.id },
+        data: { id: eventData.data.id },
         version: "1.0.0",
       });
     });
 
     // Underwriting service simulation
-    await bus.subscribe("underwrite_requested", async (event: any) => {
+    await bus.subscribe("underwrite_requested", async (event) => {
       underwriteRequested = true;
 
       // Simulate underwriting work
-      const enriched = await cache.get(`enriched:${event.data.id}`);
+      const eventData = event as unknown as { data: { id: string } };
+      const enriched = await cache.get(`enriched:${eventData.data.id}`);
       expect(enriched).toBeTruthy();
     });
 

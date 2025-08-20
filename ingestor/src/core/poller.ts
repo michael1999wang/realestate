@@ -10,6 +10,7 @@ export interface PollResult {
   maxSeen: string;
   durationMs: number;
   pages: number;
+  errors: number;
 }
 
 export async function runOnce(
@@ -30,6 +31,7 @@ export async function runOnce(
   let processed = 0;
   let changed = 0;
   let pages = 0;
+  let errors = 0;
 
   console.log(`[POLLER] Starting poll since: ${since}`);
 
@@ -81,6 +83,7 @@ export async function runOnce(
             );
           }
         } catch (error) {
+          errors++;
           console.error(`[POLLER] Error processing item:`, error);
           // Continue processing other items
         }
@@ -112,6 +115,7 @@ export async function runOnce(
       maxSeen,
       durationMs,
       pages,
+      errors,
     };
 
     console.log(`[POLLER] Poll complete:`, {
@@ -135,6 +139,7 @@ export async function runOnce(
       maxSeen: since, // Reset to original since on failure
       durationMs,
       pages,
+      errors,
     };
   }
 }

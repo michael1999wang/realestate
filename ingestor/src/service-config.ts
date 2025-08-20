@@ -2,16 +2,24 @@
  * Ingestor Service Configuration using BaseService template
  */
 
-import { BaseService, ServiceConfig } from "@realestate/shared-utils";
+import {
+  BaseService,
+  BusinessLogic,
+  BusinessLogicBase,
+  BusPort,
+  ListingChangedEvent,
+  Logger,
+  ServiceConfig,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
 import { LogBus } from "./adapters/bus.log";
-import { MemoryListingRepo } from "./adapters/repo.memory";
-import { SqlListingRepo } from "./adapters/repo.sql";
+import { MemoryRepo } from "./adapters/repo.memory";
+import { SqlRepo } from "./adapters/repo.sql";
 import { DDFSource } from "./adapters/source.ddf";
 import { MockSource } from "./adapters/source.mock";
 import { SeleniumSource } from "./adapters/source.selenium";
-import { appCfg, dbCfg, sourceCfg } from "./config/env";
-import { PollingPoller } from "./core/poller";
+import { appCfg, sourceCfg } from "./config/env";
+import { PollingPoller } from "./core/poller-class";
 
 /**
  * Event map for type safety - Ingestor only publishes, doesn't subscribe
@@ -24,22 +32,25 @@ export interface IngestorEventMap {
  * Service dependencies
  */
 export interface IngestorDependencies {
-  bus: any;
-  cache?: any;
+  bus: BusPort;
+  cache?: unknown;
   db?: Pool;
   repositories: {
-    listings: MemoryListingRepo | SqlListingRepo;
+    listings: MemoryRepo | SqlRepo;
   };
   clients: {
     source: MockSource | DDFSource | SeleniumSource;
   };
-  logger: any;
+  logger: Logger;
 }
 
 /**
  * Business logic implementation
  */
-export class IngestorBusinessLogic {
+export class IngestorBusinessLogic extends BusinessLogicBase<
+  IngestorDependencies,
+  IngestorEventMap
+> {
   private poller?: PollingPoller;
   private isPolling = false;
   private metrics = {
@@ -50,7 +61,9 @@ export class IngestorBusinessLogic {
     errors: 0,
   };
 
-  constructor(private deps: IngestorDependencies) {}
+  constructor(deps: IngestorDependencies) {
+    super(deps);
+  }
 
   /**
    * Start polling for listings
@@ -72,23 +85,35 @@ export class IngestorBusinessLogic {
         batchSize: appCfg.batchSize,
         retryAttempts: 3,
         retryDelayMs: 1000,
-        onProgress: (processed, total) => {
+        onProgress: (processed: number, total: number) => {
           this.deps.logger.info(`Processing batch: ${processed}/${total}`);
         },
-        onListingChanged: async (listing, change) => {
+        onListingChanged: async (
+          listing: unknown,
+          change: "create" | "update" | "status_change"
+        ) => {
           // Publish listing_changed event
-          await this.deps.bus.publish("listing_changed", {
-            id: listing.id,
-            updatedAt: listing.updatedAt,
-            change,
-            dirty: this.detectDirtyFields(listing, change),
+          const listingWithId = listing as { id: string; updatedAt: string };
+          await this.deps.bus.publish<ListingChangedEvent>({
+            type: "listing_changed",
+            id: listingWithId.id,
+            timestamp: new Date().toISOString(),
+            data: {
+              id: listingWithId.id,
+              updatedAt: listingWithId.updatedAt,
+              change,
+              dirty: this.detectDirtyFields(listing, change),
+            },
           });
 
           this.metrics.eventsPublished++;
-          this.deps.logger.info(`Published listing_changed for ${listing.id}:`, {
-            change,
-            dirty: this.detectDirtyFields(listing, change),
-          });
+          this.deps.logger.info(
+            `Published listing_changed for ${listingWithId.id}:`,
+            {
+              change,
+              dirty: this.detectDirtyFields(listing, change),
+            }
+          );
         },
       }
     );
@@ -122,7 +147,7 @@ export class IngestorBusinessLogic {
    * Detect which fields have changed (simplified logic)
    */
   private detectDirtyFields(
-    listing: any,
+    listing: unknown,
     change: "create" | "update" | "status_change"
   ): ("price" | "status" | "fees" | "tax" | "media" | "address")[] {
     // For now, return common dirty fields based on change type
@@ -146,9 +171,9 @@ export class IngestorBusinessLogic {
     while (this.isPolling) {
       try {
         this.deps.logger.info("Starting poll cycle...");
-        
+
         const result = await this.poller!.poll();
-        
+
         this.metrics.pollsCompleted++;
         this.metrics.listingsProcessed += result.processed;
         this.metrics.listingsChanged += result.changed;
@@ -164,11 +189,10 @@ export class IngestorBusinessLogic {
         if (this.isPolling) {
           await this.sleep(appCfg.pollIntervalSec * 1000);
         }
-
       } catch (error) {
         this.metrics.errors++;
         this.deps.logger.error("Error in polling loop:", error);
-        
+
         // Wait before retrying
         if (this.isPolling) {
           await this.sleep(5000); // 5 seconds
@@ -181,7 +205,7 @@ export class IngestorBusinessLogic {
    * Sleep utility
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -226,41 +250,55 @@ export const ingestorServiceConfig: ServiceConfig<
 
   publications: [{ topic: "listing_changed" }],
 
-  createBusinessLogic: (deps) => {
+  createBusinessLogic: (deps: IngestorDependencies) => {
     const logic = new IngestorBusinessLogic(deps);
-    
+
     // Start polling when business logic is created
     setImmediate(() => {
-      logic.startPolling().catch(error => {
+      logic.startPolling().catch((error: unknown) => {
         deps.logger.error("Failed to start polling:", error);
       });
     });
-    
-    return logic;
+
+    return logic as unknown as BusinessLogic<IngestorEventMap>;
   },
 
-  createRepositories: (pool) => ({
-    listings: appCfg.mode === "dev" 
-      ? new MemoryListingRepo()
-      : new SqlListingRepo(pool),
+  createRepositories: (pool: Pool) => ({
+    listings:
+      appCfg.mode === "dev"
+        ? new MemoryRepo()
+        : new SqlRepo({
+            host: process.env.DB_HOST || "localhost",
+            port: parseInt(process.env.DB_PORT || "5432", 10),
+            user: process.env.DB_USER || "postgres",
+            password: process.env.DB_PASSWORD || "password",
+            database: process.env.DB_NAME || "ingestor_dev",
+          }),
   }),
 
   createExternalClients: () => {
     // Create source based on configuration
     let source: MockSource | DDFSource | SeleniumSource;
-    
+
     switch (sourceCfg.type) {
       case "mock":
-        source = new MockSource(sourceCfg.mockFixturesPath);
+        source = new MockSource(25); // page size
         break;
       case "ddf":
-        source = new DDFSource(sourceCfg.ddfConfig);
+        source = new DDFSource({
+          baseUrl: process.env.DDF_BASE_URL || "https://api.ddf.ca",
+          username: process.env.DDF_USERNAME || "",
+          password: process.env.DDF_PASSWORD || "",
+          loginUrl: process.env.DDF_LOGIN_URL || "https://api.ddf.ca/login",
+        });
         break;
       case "selenium":
-        source = new SeleniumSource(sourceCfg.seleniumConfig);
+        source = new SeleniumSource({
+          baseUrl: process.env.SELENIUM_BASE_URL || "https://example.com",
+        });
         break;
       default:
-        source = new MockSource("fixtures/treb_listings.json");
+        source = new MockSource(25);
     }
 
     return { source };
@@ -300,7 +338,7 @@ export class IngestorService extends BaseService<
     // Add custom shutdown handler to stop polling
     this.lifecycle.addShutdownHandler(async () => {
       if (this.businessLogic) {
-        (this.businessLogic as IngestorBusinessLogic).stopPolling();
+        (this.businessLogic as unknown as IngestorBusinessLogic).stopPolling();
       }
     });
 

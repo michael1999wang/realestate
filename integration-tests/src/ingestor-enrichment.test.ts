@@ -7,7 +7,7 @@ import { MemoryRepo as IngestorRepo } from "../../ingestor/src/adapters/repo.mem
 import { runOnce } from "../../ingestor/src/core/poller";
 import { SourcePort } from "../../ingestor/src/core/ports";
 
-import { MemoryCache } from "@realestate/shared-utils/cache";
+import { MemoryCache } from "@realestate/shared-utils";
 import { CMHCAPI } from "../../enrichment/src/adapters/cmhc.api";
 import { GeocoderAPI } from "../../enrichment/src/adapters/geocode.api";
 import {

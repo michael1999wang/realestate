@@ -22,7 +22,67 @@ export interface BaseEvent {
 /**
  * Event handler function type
  */
-export type EventHandler<T = any> = (event: T) => Promise<void>;
+export type EventHandler<T extends BaseEvent = BaseEvent> = (
+  event: T
+) => Promise<void>;
+
+/**
+ * Specific event interfaces
+ */
+export interface ListingChangedEvent extends BaseEvent {
+  type: "listing_changed";
+  data: {
+    id: string;
+    updatedAt: string;
+    change: "create" | "update" | "status_change";
+    dirty?: ("price" | "status" | "fees" | "tax" | "media" | "address")[];
+  };
+}
+
+export interface DataEnrichedEvent extends BaseEvent {
+  type: "data_enriched";
+  data: {
+    id: string;
+    enrichmentTypes: string[];
+    updatedAt: string;
+  };
+}
+
+export interface UnderwriteRequestedEvent extends BaseEvent {
+  type: "underwrite_requested";
+  data: {
+    id: string;
+    assumptionsId?: string;
+  };
+}
+
+export interface UnderwriteCompletedEvent extends BaseEvent {
+  type: "underwrite_completed";
+  data: {
+    id: string;
+    resultId: string;
+    source: "grid" | "exact";
+    score?: number;
+  };
+}
+
+export interface PropertyScoredEvent extends BaseEvent {
+  type: "property_scored";
+  data: {
+    id: string;
+    score: number;
+    userId?: string;
+  };
+}
+
+export interface AlertsFiredEvent extends BaseEvent {
+  type: "alert_fired";
+  data: {
+    userId: string;
+    listingId: string;
+    resultId: string;
+  };
+}
 
 /**
  * Standard bus port interface

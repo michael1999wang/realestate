@@ -140,7 +140,7 @@ export interface HealthCheck {
  */
 export interface BusinessLogic<TEventMap> {
   /** Event handlers are defined as methods named handle{EventType} */
-  [key: string]: (event: any) => Promise<void>;
+  [key: string]: unknown;
 }
 
 /**
@@ -208,10 +208,10 @@ export interface ServiceMetrics {
  * Logger interface
  */
 export interface Logger {
-  debug(message: string, ...args: any[]): void;
-  info(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  error(message: string, ...args: any[]): void;
+  debug(message: string, ...args: unknown[]): void;
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
 }
 
 /**

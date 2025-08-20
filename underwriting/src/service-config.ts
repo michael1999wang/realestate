@@ -2,7 +2,15 @@
  * Underwriting Service Configuration using BaseService template
  */
 
-import { BaseService, ServiceConfig } from "@realestate/shared-utils";
+import {
+  BaseService,
+  BusinessLogic,
+  BusinessLogicBase,
+  BusPort,
+  Logger,
+  ServiceConfig,
+  UnderwriteCompletedEvent,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
 import { SnapshotsReadAdapter } from "./adapters/read.snapshots";
 import {
@@ -10,7 +18,6 @@ import {
   SqlFactorsRepo,
   SqlUWRepo,
 } from "./adapters/repo.sql";
-import { dbCfg, gridCfg } from "./config/env";
 import { computeExactFromId } from "./core/exact";
 import { computeGrid } from "./core/grid";
 
@@ -34,8 +41,8 @@ export interface UnderwritingEventMap {
  * Service dependencies
  */
 export interface UnderwritingDependencies {
-  bus: any;
-  cache?: any;
+  bus: BusPort;
+  cache?: unknown;
   db?: Pool;
   repositories: {
     snapshots: SnapshotsReadAdapter;
@@ -43,14 +50,17 @@ export interface UnderwritingDependencies {
     underwriting: SqlUWRepo;
     factors: SqlFactorsRepo;
   };
-  clients: Record<string, any>;
-  logger: any;
+  clients: Record<string, unknown>;
+  logger: Logger;
 }
 
 /**
  * Business logic implementation
  */
-export class UnderwritingBusinessLogic {
+export class UnderwritingBusinessLogic extends BusinessLogicBase<
+  UnderwritingDependencies,
+  UnderwritingEventMap
+> {
   private metrics = {
     underwriteRequestsProcessed: 0,
     listingChangesProcessed: 0,
@@ -60,7 +70,9 @@ export class UnderwritingBusinessLogic {
     errors: 0,
   };
 
-  constructor(private deps: UnderwritingDependencies) {}
+  constructor(deps: UnderwritingDependencies) {
+    super(deps);
+  }
 
   /**
    * Handle underwrite_requested event
@@ -70,12 +82,18 @@ export class UnderwritingBusinessLogic {
     event: UnderwritingEventMap["underwrite_requested"]
   ): Promise<void> {
     try {
-      this.deps.logger.info(`Processing underwrite request for listing ${event.id}`);
+      this.deps.logger.info(
+        `Processing underwrite request for listing ${event.id}`
+      );
 
       // Load base inputs to ensure listing exists
-      const baseInputs = await this.deps.repositories.snapshots.loadBaseInputs(event.id);
+      const baseInputs = await this.deps.repositories.snapshots.loadBaseInputs(
+        event.id
+      );
       if (!baseInputs) {
-        this.deps.logger.warn(`Base inputs not found for listing ${event.id}, skipping`);
+        this.deps.logger.warn(
+          `Base inputs not found for listing ${event.id}, skipping`
+        );
         return;
       }
 
@@ -97,10 +115,9 @@ export class UnderwritingBusinessLogic {
           this.deps.repositories.factors
         );
 
-        resultId = result.resultId;
+        resultId = result.id;
         source = "exact";
         this.metrics.exactComputations++;
-
       } else {
         // Grid computation with default assumptions
         this.deps.logger.info(`Computing grid underwrite for ${event.id}`);
@@ -109,21 +126,25 @@ export class UnderwritingBusinessLogic {
           event.id,
           this.deps.repositories.snapshots,
           this.deps.repositories.underwriting,
-          this.deps.repositories.factors,
-          gridCfg
+          this.deps.repositories.factors
         );
 
-        resultId = result.resultId;
+        resultId = `grid-${event.id}-${Date.now()}`;
         source = "grid";
         this.metrics.gridComputations++;
       }
 
       // Publish completion event
-      await this.deps.bus.publish("underwrite_completed", {
+      await this.deps.bus.publish<UnderwriteCompletedEvent>({
+        type: "underwrite_completed",
         id: event.id,
-        resultId,
-        source,
-        score: undefined, // Could add scoring logic here
+        timestamp: new Date().toISOString(),
+        data: {
+          id: event.id,
+          resultId,
+          source,
+          score: undefined, // Could add scoring logic here
+        },
       });
 
       this.metrics.underwriteRequestsProcessed++;
@@ -134,10 +155,12 @@ export class UnderwritingBusinessLogic {
         source,
         assumptionsId: event.assumptionsId,
       });
-
     } catch (error) {
       this.metrics.errors++;
-      this.deps.logger.error(`Error processing underwrite request for ${event.id}:`, error);
+      this.deps.logger.error(
+        `Error processing underwrite request for ${event.id}:`,
+        error
+      );
       throw error; // Re-throw for retry logic
     }
   }
@@ -154,39 +177,52 @@ export class UnderwritingBusinessLogic {
 
       // Only process if financial inputs changed
       const financialFields = ["price", "fees", "tax"];
-      const hasFinancialChanges = event.dirty?.some(field => 
-        financialFields.includes(field)
-      ) ?? false;
+      const hasFinancialChanges =
+        event.dirty?.some((field) => financialFields.includes(field)) ?? false;
 
       if (!hasFinancialChanges) {
-        this.deps.logger.info(`No financial changes for ${event.id}, skipping recompute`);
+        this.deps.logger.info(
+          `No financial changes for ${event.id}, skipping recompute`
+        );
         return;
       }
 
       // Load base inputs
-      const baseInputs = await this.deps.repositories.snapshots.loadBaseInputs(event.id);
+      const baseInputs = await this.deps.repositories.snapshots.loadBaseInputs(
+        event.id
+      );
       if (!baseInputs) {
-        this.deps.logger.warn(`Base inputs not found for listing ${event.id}, skipping`);
+        this.deps.logger.warn(
+          `Base inputs not found for listing ${event.id}, skipping`
+        );
         return;
       }
 
       // Recompute grid (invalidates cached results)
-      this.deps.logger.info(`Recomputing grid for ${event.id} due to financial changes`);
-      
+      this.deps.logger.info(
+        `Recomputing grid for ${event.id} due to financial changes`
+      );
+
       const result = await computeGrid(
         event.id,
         this.deps.repositories.snapshots,
         this.deps.repositories.underwriting,
-        this.deps.repositories.factors,
-        gridCfg
+        this.deps.repositories.factors
       );
 
+      const resultId = `grid-${event.id}-${Date.now()}`;
+
       // Publish completion event
-      await this.deps.bus.publish("underwrite_completed", {
+      await this.deps.bus.publish<UnderwriteCompletedEvent>({
+        type: "underwrite_completed",
         id: event.id,
-        resultId: result.resultId,
-        source: "grid",
-        score: undefined,
+        timestamp: new Date().toISOString(),
+        data: {
+          id: event.id,
+          resultId,
+          source: "grid",
+          score: undefined,
+        },
       });
 
       this.metrics.listingChangesProcessed++;
@@ -194,14 +230,16 @@ export class UnderwritingBusinessLogic {
       this.metrics.completedEventsPublished++;
 
       this.deps.logger.info(`Recomputed underwrite for ${event.id}:`, {
-        resultId: result.resultId,
+        resultId,
         source: "grid",
         trigger: "listing_changed",
       });
-
     } catch (error) {
       this.metrics.errors++;
-      this.deps.logger.error(`Error processing listing_changed for ${event.id}:`, error);
+      this.deps.logger.error(
+        `Error processing listing_changed for ${event.id}:`,
+        error
+      );
       throw error;
     }
   }
@@ -217,8 +255,9 @@ export class UnderwritingBusinessLogic {
    * Check if service is healthy
    */
   isHealthy(): boolean {
-    return this.metrics.errors === 0 || (
-      this.metrics.underwriteRequestsProcessed > 0 || 
+    return (
+      this.metrics.errors === 0 ||
+      this.metrics.underwriteRequestsProcessed > 0 ||
       this.metrics.listingChangesProcessed > 0
     );
   }
@@ -269,9 +308,12 @@ export const underwritingServiceConfig: ServiceConfig<
 
   publications: [{ topic: "underwrite_completed" }],
 
-  createBusinessLogic: (deps) => new UnderwritingBusinessLogic(deps),
+  createBusinessLogic: (deps: UnderwritingDependencies) =>
+    new UnderwritingBusinessLogic(
+      deps
+    ) as unknown as BusinessLogic<UnderwritingEventMap>,
 
-  createRepositories: (pool) => ({
+  createRepositories: (pool: Pool) => ({
     snapshots: new SnapshotsReadAdapter(pool),
     assumptions: new SqlAssumptionsRepo(pool),
     underwriting: new SqlUWRepo(pool),

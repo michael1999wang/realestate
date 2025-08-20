@@ -2,8 +2,16 @@
  * Rent Estimator Service Configuration using BaseService template
  */
 
-import { MemoryCache } from "@realestate/shared-utils/cache";
-import { BaseService, ServiceConfig } from "@realestate/shared-utils/service";
+import {
+  BaseService,
+  BusinessLogic,
+  BusinessLogicBase,
+  BusPort,
+  Logger,
+  MemoryCache,
+  ServiceConfig,
+  UnderwriteRequestedEvent,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
 import { RedisCache } from "./adapters/cache.redis";
 import { MockCompsSource } from "./adapters/comps.source";
@@ -34,7 +42,7 @@ export interface RentEstimatorEventMap {
  * Service dependencies
  */
 export interface RentEstimatorDependencies {
-  bus: any;
+  bus: BusPort;
   cache: RedisCache | MemoryCache;
   db?: Pool;
   repositories: {
@@ -45,13 +53,16 @@ export interface RentEstimatorDependencies {
     priors: MockPriorsSource;
     comps: MockCompsSource;
   };
-  logger: any;
+  logger: Logger;
 }
 
 /**
  * Business logic implementation
  */
-export class RentEstimatorBusinessLogic {
+export class RentEstimatorBusinessLogic extends BusinessLogicBase<
+  RentEstimatorDependencies,
+  RentEstimatorEventMap
+> {
   private processedListings = new Set<string>();
   private metrics = {
     eventsProcessed: 0,
@@ -61,7 +72,9 @@ export class RentEstimatorBusinessLogic {
     errors: 0,
   };
 
-  constructor(private deps: RentEstimatorDependencies) {}
+  constructor(deps: RentEstimatorDependencies) {
+    super(deps);
+  }
 
   /**
    * Handle listing changed events
@@ -101,7 +114,17 @@ export class RentEstimatorBusinessLogic {
         priors: this.deps.clients.priors,
         comps: this.deps.clients.comps,
         cache: this.deps.cache,
-        bus: this.deps.bus,
+        bus: {
+          subscribe: this.deps.bus.subscribe.bind(this.deps.bus),
+          publish: async (evt: { id: string }) => {
+            await this.deps.bus.publish<UnderwriteRequestedEvent>({
+              type: "underwrite_requested",
+              id: evt.id,
+              timestamp: new Date().toISOString(),
+              data: evt,
+            });
+          },
+        },
       });
 
       this.metrics.eventsProcessed++;
@@ -110,8 +133,13 @@ export class RentEstimatorBusinessLogic {
         this.metrics.estimatesChanged++;
 
         // Publish underwrite request when rent estimate changes materially
-        await this.deps.bus.publish("underwrite_requested", {
+        await this.deps.bus.publish<UnderwriteRequestedEvent>({
+          type: "underwrite_requested",
           id: event.id,
+          timestamp: new Date().toISOString(),
+          data: {
+            id: event.id,
+          },
         });
 
         this.metrics.underwriteRequestsPublished++;
@@ -163,7 +191,17 @@ export class RentEstimatorBusinessLogic {
         priors: this.deps.clients.priors,
         comps: this.deps.clients.comps,
         cache: this.deps.cache,
-        bus: this.deps.bus,
+        bus: {
+          subscribe: this.deps.bus.subscribe.bind(this.deps.bus),
+          publish: async (evt: { id: string }) => {
+            await this.deps.bus.publish<UnderwriteRequestedEvent>({
+              type: "underwrite_requested",
+              id: evt.id,
+              timestamp: new Date().toISOString(),
+              data: evt,
+            });
+          },
+        },
       });
 
       this.metrics.eventsProcessed++;
@@ -171,8 +209,13 @@ export class RentEstimatorBusinessLogic {
       if (result.changed) {
         this.metrics.estimatesChanged++;
 
-        await this.deps.bus.publish("underwrite_requested", {
+        await this.deps.bus.publish<UnderwriteRequestedEvent>({
+          type: "underwrite_requested",
           id: event.id,
+          timestamp: new Date().toISOString(),
+          data: {
+            id: event.id,
+          },
         });
 
         this.metrics.underwriteRequestsPublished++;
@@ -265,18 +308,21 @@ export const rentEstimatorServiceConfig: ServiceConfig<
 
   publications: [{ topic: "underwrite_requested" }],
 
-  createBusinessLogic: (deps) => new RentEstimatorBusinessLogic(deps),
+  createBusinessLogic: (deps: RentEstimatorDependencies) =>
+    new RentEstimatorBusinessLogic(
+      deps
+    ) as unknown as BusinessLogic<RentEstimatorEventMap>,
 
-  createRepositories: (pool) => ({
+  createRepositories: (pool: Pool) => ({
     rent:
       process.env.USE_MEMORY === "true" || process.env.NODE_ENV === "test"
         ? new MemoryRentRepo()
         : new SqlRentRepo({
-            host: config.db.host,
-            port: config.db.port,
-            user: config.db.user,
-            password: config.db.password,
-            database: config.db.name,
+            host: process.env.DB_HOST || "localhost",
+            port: parseInt(process.env.DB_PORT || "5435", 10),
+            user: process.env.DB_USER || "postgres",
+            password: process.env.DB_PASSWORD || "password",
+            database: process.env.DB_NAME || "rent_estimator_dev",
           }),
   }),
 

@@ -264,7 +264,7 @@ async function main(): Promise<void> {
       port: dbCfg.port,
       user: dbCfg.user,
       password: dbCfg.password,
-      database: dbCfg.name,
+      database: dbCfg.database,
       max: 5, // Smaller pool for API
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,

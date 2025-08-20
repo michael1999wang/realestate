@@ -295,7 +295,6 @@ describe("End-to-End Alerts Integration", () => {
       resultId: "result-777777",
       score: 7.8,
       source: "exact",
-      type: "underwrite_completed",
     });
 
     // Process Vancouver property with high score
@@ -304,7 +303,6 @@ describe("End-to-End Alerts Integration", () => {
       resultId: "result-666666",
       score: 8.7, // Above 8.5 threshold
       source: "grid",
-      type: "underwrite_completed",
     });
 
     // Should have 2 alerts - one for each user

@@ -86,7 +86,7 @@ export class RedisBus implements BusPort {
       console.log(`[${this.serviceName}] Subscribed to topic: ${topic}`);
     }
 
-    this.handlers.get(topic)!.push(handler);
+    this.handlers.get(topic)!.push(handler as EventHandler);
   }
 
   async publish<T extends BaseEvent>(event: T): Promise<void> {

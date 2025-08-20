@@ -6,7 +6,9 @@
  */
 
 export * from "./base-service";
+export { BusinessLogicBase } from "./business-logic";
 export * from "./lifecycle";
+export * from "./types";
 export type {
   BusinessLogic,
   HealthCheck,

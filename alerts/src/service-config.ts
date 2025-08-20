@@ -3,13 +3,22 @@
  */
 
 // import { createServiceConfig } from "@realestate/shared-utils/config";
-import { BaseService, ServiceConfig } from "@realestate/shared-utils/service";
+import {
+  AlertsFiredEvent,
+  BaseService,
+  BusinessLogic,
+  BusinessLogicBase,
+  BusPort,
+  Logger,
+  ServiceConfig,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
 import { sendDevBrowser } from "./adapters/delivery.devbrowser";
 import { MockReadAdapter } from "./adapters/read.mock";
 import { MemoryAlertsRepo } from "./adapters/repo.memory";
 import { PostgresAlertsRepo } from "./adapters/repo.sql";
 import { MultiChannelDispatcher } from "./core/dispatch";
+import { ListingSnapshot, SavedSearch, UWMetrics } from "./core/dto";
 
 /**
  * Event map for type safety
@@ -32,8 +41,8 @@ export interface AlertsEventMap {
  * Service dependencies
  */
 export interface AlertsDependencies {
-  bus: any;
-  cache?: any;
+  bus: BusPort;
+  cache?: unknown;
   db?: Pool;
   repositories: {
     alerts: MemoryAlertsRepo | PostgresAlertsRepo;
@@ -42,14 +51,22 @@ export interface AlertsDependencies {
     read: MockReadAdapter;
     dispatcher: MultiChannelDispatcher;
   };
-  logger: any;
+  logger: Logger;
 }
 
 /**
  * Business logic implementation
  */
-export class AlertsBusinessLogic {
-  constructor(private deps: AlertsDependencies) {}
+export class AlertsBusinessLogic extends BusinessLogicBase<
+  AlertsDependencies,
+  AlertsEventMap
+> {
+  // Note: Implementing BusinessLogic interface causes conflicts with private methods
+  // We'll satisfy it structurally instead
+
+  constructor(deps: AlertsDependencies) {
+    super(deps);
+  }
 
   /**
    * Handle underwrite completed events
@@ -119,6 +136,7 @@ export class AlertsBusinessLogic {
             statusByChannel: {},
           },
           createdAt: new Date().toISOString(),
+          triggeredAt: new Date().toISOString(),
         };
 
         await this.deps.repositories.alerts.insertAlert(alert);
@@ -149,8 +167,8 @@ export class AlertsBusinessLogic {
         );
 
         // Publish alert fired event
-        await this.deps.bus.publish({
-          type: "alerts_fired",
+        await this.deps.bus.publish<AlertsFiredEvent>({
+          type: "alert_fired",
           id: `alert-${alert.id}`,
           timestamp: new Date().toISOString(),
           data: {
@@ -158,7 +176,6 @@ export class AlertsBusinessLogic {
             listingId: event.id,
             resultId: event.resultId,
           },
-          version: "1.0.0",
         });
       }
     }
@@ -182,7 +199,10 @@ export class AlertsBusinessLogic {
   /**
    * Check if listing matches search criteria
    */
-  private matchesSearchCriteria(listing: any, search: any): boolean {
+  private matchesSearchCriteria(
+    listing: ListingSnapshot,
+    search: SavedSearch
+  ): boolean {
     // Implement filtering logic
     if (search.filter.city && listing.city !== search.filter.city) return false;
     if (search.filter.province && listing.province !== search.filter.province)
@@ -201,7 +221,10 @@ export class AlertsBusinessLogic {
   /**
    * Check if results meet threshold requirements
    */
-  private meetsThresholds(metrics: any, thresholds: any): boolean {
+  private meetsThresholds(
+    metrics: UWMetrics,
+    thresholds: SavedSearch["thresholds"]
+  ): boolean {
     // If there are no financial thresholds defined, don't match based on metrics
     const hasFinancialThresholds =
       thresholds.minDSCR ||
@@ -209,10 +232,23 @@ export class AlertsBusinessLogic {
       thresholds.requireNonNegativeCF;
     if (!hasFinancialThresholds) return false;
 
-    if (thresholds.minDSCR && metrics.dscr < thresholds.minDSCR) return false;
-    if (thresholds.minCoC && metrics.cashOnCashPct < thresholds.minCoC)
+    if (
+      thresholds.minDSCR &&
+      metrics.dscr !== undefined &&
+      metrics.dscr < thresholds.minDSCR
+    )
       return false;
-    if (thresholds.requireNonNegativeCF && metrics.cashFlowAnnual < 0)
+    if (
+      thresholds.minCoC &&
+      metrics.cashOnCashPct !== undefined &&
+      metrics.cashOnCashPct < thresholds.minCoC
+    )
+      return false;
+    if (
+      thresholds.requireNonNegativeCF &&
+      metrics.cashFlowAnnual !== undefined &&
+      metrics.cashFlowAnnual < 0
+    )
       return false;
 
     return true;
@@ -229,19 +265,31 @@ export class AlertsBusinessLogic {
    * Get matched thresholds for display
    */
   private getMatchedThresholds(
-    metrics: any,
-    thresholds: any,
+    metrics: UWMetrics,
+    thresholds: SavedSearch["thresholds"],
     score?: number
   ): string[] {
     const matched: string[] = [];
 
-    if (thresholds.minDSCR && metrics.dscr >= thresholds.minDSCR) {
+    if (
+      thresholds.minDSCR &&
+      metrics.dscr !== undefined &&
+      metrics.dscr >= thresholds.minDSCR
+    ) {
       matched.push(`dscr>=${thresholds.minDSCR}`);
     }
-    if (thresholds.minCoC && metrics.cashOnCashPct >= thresholds.minCoC) {
+    if (
+      thresholds.minCoC &&
+      metrics.cashOnCashPct !== undefined &&
+      metrics.cashOnCashPct >= thresholds.minCoC
+    ) {
       matched.push(`coc>=${thresholds.minCoC}`);
     }
-    if (thresholds.requireNonNegativeCF && metrics.cashFlowAnnual >= 0) {
+    if (
+      thresholds.requireNonNegativeCF &&
+      metrics.cashFlowAnnual !== undefined &&
+      metrics.cashFlowAnnual >= 0
+    ) {
       matched.push("cf>=0");
     }
     if (thresholds.minScore && score && score >= thresholds.minScore) {
@@ -297,9 +345,10 @@ export const alertsServiceConfig: ServiceConfig<
 
   publications: [{ topic: "alerts_fired" }],
 
-  createBusinessLogic: (deps) => new AlertsBusinessLogic(deps),
+  createBusinessLogic: (deps: AlertsDependencies) =>
+    new AlertsBusinessLogic(deps) as unknown as BusinessLogic<AlertsEventMap>,
 
-  createRepositories: (pool) => ({
+  createRepositories: (pool?: Pool) => ({
     alerts:
       process.env.NODE_ENV === "development"
         ? new MemoryAlertsRepo([
@@ -326,7 +375,9 @@ export const alertsServiceConfig: ServiceConfig<
               createdAt: new Date().toISOString(),
             },
           ])
-        : new PostgresAlertsRepo(pool),
+        : pool
+        ? new PostgresAlertsRepo(pool)
+        : new MemoryAlertsRepo(),
   }),
 
   createExternalClients: () => ({

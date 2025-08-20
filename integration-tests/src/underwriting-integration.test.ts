@@ -197,7 +197,7 @@ describe.skip("Underwriting Service Integration", () => {
 
       expect(response.ok).toBe(true);
 
-      const result = await response.json();
+      const result: any = await response.json();
       expect(result.success).toBe(true);
       expect(result.data.metrics).toBeDefined();
       expect(result.data.metrics.price).toBe(1000000);
@@ -229,7 +229,9 @@ describe.skip("Underwriting Service Integration", () => {
         }
       );
 
-      const result1 = await response1.json();
+      const result1 = (await response1.json()) as {
+        data: { fromCache: boolean; id: string };
+      };
       expect(result1.data.fromCache).toBe(false);
 
       // Second call (should hit cache)
@@ -242,7 +244,9 @@ describe.skip("Underwriting Service Integration", () => {
         }
       );
 
-      const result2 = await response2.json();
+      const result2 = (await response2.json()) as {
+        data: { fromCache: boolean; id: string };
+      };
       expect(result2.data.fromCache).toBe(true);
       expect(result2.data.id).toBe(result1.data.id);
     });
@@ -277,7 +281,7 @@ describe.skip("Underwriting Service Integration", () => {
       );
       expect(response.ok).toBe(true);
 
-      const result = await response.json();
+      const result: any = await response.json();
       expect(result.success).toBe(true);
       expect(result.data.listingId).toBe(listingId);
       expect(result.data.rentScenario).toBe("P50");
@@ -290,7 +294,7 @@ describe.skip("Underwriting Service Integration", () => {
       );
       expect(response.ok).toBe(true);
 
-      const result = await response.json();
+      const result: any = await response.json();
       expect(result.status).toBe("healthy");
     });
   });
@@ -360,7 +364,9 @@ describe.skip("Underwriting Service Integration", () => {
         );
 
       const responses = await Promise.all(requests);
-      const results = await Promise.all(responses.map((r) => r.json()));
+      const results = (await Promise.all(
+        responses.map((r) => r.json())
+      )) as Array<{ success: boolean; data: { id: string } }>;
 
       // All should succeed
       results.forEach((result) => {
