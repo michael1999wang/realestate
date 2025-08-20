@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: alerts_bus
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+
+  db:
+    image: postgres:16-alpine
+    container_name: alerts_db
+    ports: ["5437:5432"]
+    environment:
+      POSTGRES_USER: alerts
+      POSTGRES_PASSWORD: alerts
+      POSTGRES_DB: alerts_dev
+    volumes:
+      - "pgdata_alerts:/var/lib/postgresql/data"
+      - "./sql/init.sql:/docker-entrypoint-initdb.d/init.sql"
+
+  alerts:
+    build: .
+    command: sh -c "npm run dev & npm run dev:http"
+    environment:
+      REDIS_URL: redis://redis:6379
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: alerts
+      DB_PASSWORD: alerts
+      DB_NAME: alerts_dev
+      MODE: dev
+    ports: ["8082:8082"]
+    depends_on: [redis, db]
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+volumes:
+  pgdata_alerts:

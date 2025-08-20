@@ -10,11 +10,13 @@
     "test:pipeline": "vitest run src/pipeline-simple.test.ts",
     "test:pipeline-full": "vitest run src/ingestor-enrichment-rent.test.ts",
     "test:underwriting": "vitest run src/underwriting-integration.test.ts",
-    "test:all": "npm run test:integration && npm run test:pipeline && npm run test:underwriting",
+    "test:alerts": "vitest run src/alerts-integration.test.ts",
+    "test:all": "npm run test:integration && npm run test:pipeline && npm run test:underwriting && npm run test:alerts",
     "lint": "eslint src/**/*.ts",
     "build": "tsc"
   },
   "dependencies": {
+    "@realestate/alerts": "file:../alerts",
     "@realestate/enrichment": "file:../enrichment",
     "@realestate/ingestor": "file:../ingestor",
     "@realestate/rent-estimator": "file:../rent-estimator",

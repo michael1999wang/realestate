@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Alerts Dev Board</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 20px; }
+      .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin: 10px 0; }
+      .badge { padding: 2px 8px; border-radius: 10px; background: #eee; margin-right: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Live Alerts (Dev)</h1>
+    <div id="log"></div>
+    <script>
+      const log = document.getElementById('log');
+      const es = new EventSource('/sse');
+      es.addEventListener('alert', (e) => {
+        const a = JSON.parse(e.data);
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.innerHTML = `
+          <div><span class="badge">${a.userId}</span><span class="badge">${a.savedSearchId}</span><span class="badge">${a.listingId}</span></div>
+          <div><strong>${a.payload.snapshot.city}, ${a.payload.snapshot.province}</strong> • ${a.payload.snapshot.propertyType} • \$${(a.payload.snapshot.price||0).toLocaleString()}</div>
+          <div>Matched: ${a.payload.matched?.join(', ') || '-'}</div>
+          <pre style="white-space:pre-wrap;background:#fafafa;padding:8px;border-radius:8px;">${JSON.stringify(a.payload.metrics || {}, null, 2)}</pre>
+        `;
+        log.prepend(el);
+      });
+    </script>
+  </body>
+</html>
