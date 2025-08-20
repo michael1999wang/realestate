@@ -1,65 +1,50 @@
 {
   "name": "@realestate/shared-utils",
   "version": "1.0.0",
-  "description": "Shared utilities for the realestate microservices",
+  "description": "Shared utilities and infrastructure for real estate microservices",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
-    "test": "vitest"
+    "generate-service": "ts-node src/service/generator.ts",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "bin": {
+    "create-realestate-service": "dist/service/generator.js"
   },
   "dependencies": {
-    "ioredis": "^5.3.2",
+    "ioredis": "^5.3.0",
     "pg": "^8.11.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
-  "peerDependencies": {},
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./service": {
+      "import": "./dist/service/index.js",
+      "require": "./dist/service/index.js",
+      "types": "./dist/service/index.d.ts"
     },
     "./bus": {
-      "types": "./dist/bus/index.d.ts",
       "import": "./dist/bus/index.js",
-      "require": "./dist/bus/index.js"
-    },
-    "./config": {
-      "types": "./dist/config/index.d.ts",
-      "import": "./dist/config/index.js",
-      "require": "./dist/config/index.js"
-    },
-    "./versioning": {
-      "types": "./dist/versioning/index.d.ts",
-      "import": "./dist/versioning/index.js",
-      "require": "./dist/versioning/index.js"
-    },
-    "./debounce": {
-      "types": "./dist/debounce/index.d.ts",
-      "import": "./dist/debounce/index.js",
-      "require": "./dist/debounce/index.js"
-    },
-    "./adapters": {
-      "types": "./dist/adapters/index.d.ts",
-      "import": "./dist/adapters/index.js",
-      "require": "./dist/adapters/index.js"
-    },
-    "./worker": {
-      "types": "./dist/worker/index.d.ts",
-      "import": "./dist/worker/index.js",
-      "require": "./dist/worker/index.js"
+      "require": "./dist/bus/index.js",
+      "types": "./dist/bus/index.d.ts"
     },
     "./cache": {
-      "types": "./dist/cache/index.d.ts",
       "import": "./dist/cache/index.js",
-      "require": "./dist/cache/index.js"
+      "require": "./dist/cache/index.js",
+      "types": "./dist/cache/index.d.ts"
     }
   }
 }

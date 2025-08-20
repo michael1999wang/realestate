@@ -6,6 +6,7 @@ export * from "./adapters";
 export * from "./cache";
 export * from "./config";
 export * from "./debounce";
+export * from "./service";
 export * from "./versioning";
 export * from "./worker";
 
