@@ -19,6 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@realestate/shared-utils": "file:../shared-utils",
     "aws-sdk": "^2.1502.0",
     "pg": "^8.11.3",
     "redis": "^4.6.12"

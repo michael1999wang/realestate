@@ -18,6 +18,14 @@ export const apiCfg = {
   cmhcMode: process.env.CMHC_MODE ?? "mock",
 };
 
+export const redisCfg = {
+  url: process.env.REDIS_URL ?? "redis://localhost:6379",
+};
+
+export const busCfg = {
+  adapter: process.env.BUS_ADAPTER ?? "REDIS", // REDIS or LOG
+};
+
 export const appCfg = {
   mode: process.env.MODE ?? "dev",
   logLevel: process.env.LOG_LEVEL ?? "info",

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+import { createBus } from "@realestate/shared-utils";
 import { Pool } from "pg";
-import { createRedisBusPort } from "../adapters/bus.redis";
+import { BusAdapter } from "../adapters/bus.adapter";
 import { SnapshotsReadAdapter } from "../adapters/read.snapshots";
 import {
   SqlAssumptionsRepo,
@@ -50,12 +51,19 @@ async function main(): Promise<void> {
 
     // Initialize Redis bus
     console.log("🔄 Connecting to Redis bus...");
-    const busPort = createRedisBusPort(redisUrl);
+    const sharedBus = createBus({
+      type: "redis",
+      serviceName: "underwriting",
+      redisUrl: redisUrl,
+    });
+    const busPort = new BusAdapter(sharedBus);
 
     // Add bus cleanup to shutdown handlers
     shutdownHandlers.push(async () => {
       console.log("🔌 Closing Redis connections...");
-      await busPort.close();
+      if (busPort.close) {
+        await busPort.close();
+      }
     });
 
     // Initialize repositories

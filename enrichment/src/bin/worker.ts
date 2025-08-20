@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+import { createBus } from "@realestate/shared-utils";
 import { Pool } from "pg";
-import { LogBus } from "../adapters/bus.log";
+import { BusAdapter } from "../adapters/bus.adapter";
 import { MemoryCache } from "../adapters/cache.memory";
 import { RedisCache } from "../adapters/cache.redis";
 import { CMHCAPI } from "../adapters/cmhc.api";
@@ -10,13 +11,21 @@ import { MemoryListingRepo } from "../adapters/repo.memory"; // TODO: Replace wi
 import { SQLEnrichmentRepo } from "../adapters/repo.sql";
 import { TaxesTable } from "../adapters/taxes.table";
 import { WalkScoreAPI } from "../adapters/walkscore.api";
-import { apiCfg, appCfg, cacheCfg, dbCfg } from "../config/env";
+import {
+  apiCfg,
+  appCfg,
+  busCfg,
+  cacheCfg,
+  dbCfg,
+  redisCfg,
+} from "../config/env";
 import { EnrichmentScheduler } from "../core/scheduler";
 
 class EnrichmentWorker {
   private scheduler?: EnrichmentScheduler;
   private pgPool?: Pool;
   private cache!: RedisCache | MemoryCache;
+  private bus?: BusAdapter;
 
   async start(): Promise<void> {
     console.log("🚀 Starting Enrichment Service Worker...");
@@ -61,7 +70,13 @@ class EnrichmentWorker {
       this.seedMockListings(listingRepo);
 
       // Initialize message bus
-      const bus = new LogBus(); // TODO: Replace with SQSBus in production
+      const sharedBus = createBus({
+        type: busCfg.adapter === "REDIS" ? "redis" : "memory",
+        serviceName: "enrichment",
+        redisUrl: busCfg.adapter === "REDIS" ? redisCfg.url : undefined,
+      });
+
+      this.bus = new BusAdapter(sharedBus);
 
       // Initialize external API clients
       const walkScore = new WalkScoreAPI(
@@ -83,7 +98,7 @@ class EnrichmentWorker {
         {
           listingRepo,
           enrRepo,
-          bus,
+          bus: this.bus,
           cache: this.cache,
           walk: walkScore,
           cmhc,
@@ -204,6 +219,10 @@ class EnrichmentWorker {
 
     if (this.scheduler) {
       this.scheduler.stop();
+    }
+
+    if (this.bus?.close) {
+      await this.bus.close();
     }
 
     if (this.cache && this.cache instanceof RedisCache) {

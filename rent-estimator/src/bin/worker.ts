@@ -5,7 +5,8 @@ import { DebounceService } from "../core/debounce";
 import { estimateForListing } from "../core/estimate";
 
 // Adapters
-import { MemoryBus } from "../adapters/bus.memory";
+import { createBus } from "@realestate/shared-utils";
+import { BusAdapter } from "../adapters/bus.adapter";
 import { RedisBus } from "../adapters/bus.redis";
 import { MemoryCache } from "../adapters/cache.memory";
 import { RedisCache } from "../adapters/cache.redis";
@@ -274,7 +275,9 @@ function createDependencies(): {
       priors: new MockPriorsSource(),
       comps: new MockCompsSource(),
       cache: new MemoryCache(),
-      bus: new MemoryBus(),
+      bus: new BusAdapter(
+        createBus({ type: "memory", serviceName: "rent-estimator" })
+      ),
     };
   }
 
@@ -291,7 +294,13 @@ function createDependencies(): {
     priors: new MockPriorsSource(), // TODO: Replace with actual priors source
     comps: new MockCompsSource(), // TODO: Replace with actual comps source
     cache: new RedisCache(config.redis),
-    bus: new RedisBus(config.redis),
+    bus: new BusAdapter(
+      createBus({
+        type: "redis",
+        serviceName: "rent-estimator",
+        redisUrl: config.redis,
+      })
+    ),
   };
 }
 

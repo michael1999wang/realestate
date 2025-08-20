@@ -1,5 +1,6 @@
+import { createBus } from "@realestate/shared-utils";
 import { Pool } from "pg";
-import { RedisBus } from "../adapters/bus.redis";
+import { BusAdapter } from "../adapters/bus.adapter";
 import { sendDevBrowser } from "../adapters/delivery.devbrowser";
 import { MockReadAdapter } from "../adapters/read.mock";
 import { MemoryAlertsRepo } from "../adapters/repo.memory";
@@ -13,7 +14,12 @@ async function main() {
   console.log("Starting Alerts Worker...", getServiceInfo());
 
   // Initialize adapters
-  const bus = new RedisBus(cfg.redisUrl);
+  const sharedBus = createBus({
+    type: "redis",
+    serviceName: "alerts",
+    redisUrl: cfg.redisUrl,
+  });
+  const bus = new BusAdapter(sharedBus);
 
   let repo;
   if (cfg.mode === "dev") {

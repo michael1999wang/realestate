@@ -39,25 +39,12 @@
 - **Outputs/Events**: `alert_fired` + sends email/SMS/Slack/web-push
 - **Storage**: saved_searches, assumption_sets, alerts
 
-## 6. API Gateway / BFF
-
-- **Role**: Public API for UI and integrations
-- **Endpoints**:
-  - `/properties/search`
-  - `/properties/{id}`
-  - `/underwrite`
-  - `/assumptions`
-  - `/saved-searches`
-  - `/alerts`
-- **Auth**: Clerk/Auth0; rate limits per plan
-- **Notes**: Reads from OLTP + search index
-
-## 7. Web App (Dashboard)
+## 6. Web App (Dashboard)
 
 - **Role**: Next.js app for search, detail view, sensitivity sliders, saved searches, alerts
-- **Consumes**: API Gateway
+- **Consumes**: Direct service APIs
 
-## 8. Notifications
+## 7. Notifications
 
 - **Role**: Email/SMS/Slack/web-push delivery; templates & retries
 - **Inputs**: `alert_fired`, system messages
@@ -68,7 +55,7 @@
 
 # Advanced / Nice-to-Have Services
 
-## 9. Vision (Reno AI)
+## 8. Vision (Reno AI)
 
 - **Role**: Analyze photos → room types, condition, features; propose renos; cost ranges; ARV uplift
 - **Inputs**: `listing_changed` (on media present)
@@ -76,29 +63,29 @@
 - **External**: Multimodal LLM or small vision models
 - **Notes**: Versioned outputs; per-image hashing + caching
 
-## 10. Search & Index
+## 9. Search & Index
 
 - **Role**: Fast text/geo queries over listings + facets (city, beds, price)
 - **Backend**: Postgres+PGVector/Trigram or OpenSearch/Meilisearch
 - **Updates**: Subscribed to `listing_changed` to reindex
 
-## 11. Billing & Plans
+## 10. Billing & Plans
 
 - **Role**: Stripe integration, usage metering (underwrites/day, saved searches, alerts)
 - **Storage**: subscriptions, usage_counters, invoices
 - **Hooks**: Webhooks → upgrade/downgrade entitlements
 
-## 12. Admin / Ops
+## 11. Admin / Ops
 
 - **Role**: Back-office: data QA, replay jobs, kill/redo underwrites, view metrics
 - **Auth**: Owner-only
 
-## 13. Model Training (offline)
+## 12. Model Training (offline)
 
 - **Role**: Train/refresh rent model, hedonic uplift model, vision heads
 - **IO**: Reads warehouse (Parquet), writes model_registry + versioned weights
 
-## 14. Reporting & Exports
+## 13. Reporting & Exports
 
 - **Role**: Generate PDF/CSV pro-formas; bulk exports for Pro/Enterprise
 - **Inputs**: API requests or scheduled jobs
@@ -153,7 +140,7 @@
 - **Ingestor → Bus**: publishes `listing_changed`
 - **Enrichment/Rent → Repo**: write enrichments, rent_estimates
 - **Alerts → Notifications**: `sendEmail|sendSMS|sendSlack(payload)` with idempotency key
-- **API → Services**: thin orchestration; no business logic—pulls latest underwrite_grid or computes exact on-demand and caches
+- **Web App → Services**: direct API calls to services; pulls latest underwrite_grid or computes exact on-demand and caches
 
 ---
 

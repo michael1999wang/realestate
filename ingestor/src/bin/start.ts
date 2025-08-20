@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 
-import { busCfg, cfg, dbCfg, sourceCfg, validateConfig } from "../config/env";
+import { createBus } from "@realestate/shared-utils";
+import { BusAdapter } from "../adapters/bus.adapter";
+import {
+  busCfg,
+  cfg,
+  dbCfg,
+  redisCfg,
+  sourceCfg,
+  validateConfig,
+} from "../config/env";
 import { runOnce } from "../core/poller";
 import { sleep } from "../core/utils";
 
@@ -64,9 +73,15 @@ function createRepoAdapter(): RepoPort {
 }
 
 function createBusAdapter(): BusPort {
-  const busType = process.env.BUS_ADAPTER ?? "LOG";
+  switch (busCfg.adapter) {
+    case "REDIS":
+      const sharedBus = createBus({
+        type: "redis",
+        serviceName: "ingestor",
+        redisUrl: redisCfg.url,
+      });
+      return new BusAdapter(sharedBus);
 
-  switch (busType) {
     case "SQS":
       return new SQSBus(busCfg.sqs);
 

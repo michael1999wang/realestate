@@ -12,7 +12,7 @@
     "test:underwriting": "vitest run src/underwriting-integration.test.ts",
     "test:alerts": "vitest run src/alerts-integration.test.ts",
     "test:end-to-end": "vitest run src/end-to-end-alerts.test.ts",
-    "test:working": "npm run test:pipeline && npm run test:alerts && npm run test:end-to-end && npx vitest run src/services.integration.test.ts",
+    "test:working": "npm run test:pipeline && npm run test:alerts && npm run test:end-to-end && npx vitest run src/services.integration.test.ts && npx vitest run src/web-integration.test.ts",
     "test:all": "npm run test:integration && npm run test:pipeline && npm run test:underwriting && npm run test:alerts",
     "lint": "eslint src/**/*.ts",
     "build": "tsc"

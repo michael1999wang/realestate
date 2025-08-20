@@ -38,7 +38,12 @@ export const sourceCfg = {
   },
 };
 
+export const redisCfg = {
+  url: process.env.REDIS_URL ?? "redis://localhost:6379",
+};
+
 export const busCfg = {
+  adapter: process.env.BUS_ADAPTER ?? "REDIS", // REDIS, SQS, or LOG
   // SQS configuration
   sqs: {
     queueUrl: process.env.SQS_QUEUE_URL ?? "",

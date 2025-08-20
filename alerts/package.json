@@ -15,6 +15,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@realestate/shared-utils": "file:../shared-utils",
     "express": "^4.18.2",
     "ioredis": "^5.3.2",
     "pg": "^8.11.3"
