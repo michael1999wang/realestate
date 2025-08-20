@@ -18,8 +18,8 @@ import {
 } from "../../enrichment/src/adapters/repo.memory";
 
 // Rent Estimator imports
+import { MemoryCache as RentCache } from "@realestate/shared-utils/cache";
 import { MemoryBus } from "../../rent-estimator/src/adapters/bus.memory";
-import { MemoryCache as RentCache } from "../../rent-estimator/src/adapters/cache.memory";
 import { MockCompsSource } from "../../rent-estimator/src/adapters/comps.source";
 import { MockPriorsSource } from "../../rent-estimator/src/adapters/priors.source";
 import { MemoryRentRepo } from "../../rent-estimator/src/adapters/repo.memory";

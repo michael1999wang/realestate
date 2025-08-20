@@ -1,6 +1,8 @@
-import { createBus } from "@realestate/shared-utils";
+import {
+  FullBusAdapter as BusAdapter,
+  createBus,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
-import { BusAdapter } from "../adapters/bus.adapter";
 import { sendDevBrowser } from "../adapters/delivery.devbrowser";
 import { MockReadAdapter } from "../adapters/read.mock";
 import { MemoryAlertsRepo } from "../adapters/repo.memory";

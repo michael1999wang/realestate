@@ -1,4 +1,4 @@
-import { Debouncer } from "./debounce";
+import { CacheDebouncer } from "@realestate/shared-utils/debounce";
 import { ListingChangedEvent } from "./dto";
 import { enrichOne } from "./enrich";
 import {
@@ -47,7 +47,7 @@ export class EnrichmentScheduler {
     errors: 0,
   };
 
-  private debouncer: Debouncer;
+  private debouncer: CacheDebouncer;
   private isRunning = false;
 
   constructor(
@@ -58,7 +58,10 @@ export class EnrichmentScheduler {
       logLevel?: "debug" | "info" | "warn" | "error";
     } = {}
   ) {
-    this.debouncer = new Debouncer(deps.cache, config.debounceTimeoutSec ?? 30);
+    this.debouncer = new CacheDebouncer(
+      deps.cache,
+      config.debounceTimeoutSec ?? 30
+    );
   }
 
   async start(): Promise<void> {

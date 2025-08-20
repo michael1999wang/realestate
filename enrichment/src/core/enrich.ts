@@ -1,3 +1,4 @@
+import { VERSION as enrichmentVersion } from "@realestate/shared-utils";
 import { Enrichment } from "./dto";
 import {
   CachePort,
@@ -8,7 +9,6 @@ import {
   TaxesPort,
   WalkScorePort,
 } from "./ports";
-import { enrichmentVersion } from "./versioning";
 
 export async function enrichOne(
   listingId: string,

@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-import { createBus } from "@realestate/shared-utils";
+import {
+  FullBusAdapter as BusAdapter,
+  createBus,
+} from "@realestate/shared-utils";
+import { MemoryCache } from "@realestate/shared-utils/cache";
 import { Pool } from "pg";
-import { BusAdapter } from "../adapters/bus.adapter";
-import { MemoryCache } from "../adapters/cache.memory";
 import { RedisCache } from "../adapters/cache.redis";
 import { CMHCAPI } from "../adapters/cmhc.api";
 import { GeocoderAPI } from "../adapters/geocode.api";

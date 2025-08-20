@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import { createBus } from "@realestate/shared-utils";
-import { BusAdapter } from "../adapters/bus.adapter";
+import {
+  FullBusAdapter as BusAdapter,
+  createBus,
+} from "@realestate/shared-utils";
 import {
   busCfg,
   cfg,

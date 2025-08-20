@@ -1,5 +1,5 @@
+import { MemoryCache } from "@realestate/shared-utils/cache";
 import { beforeEach, describe, expect, it } from "vitest";
-import { MemoryCache } from "../src/adapters/cache.memory";
 import { CMHCAPI } from "../src/adapters/cmhc.api";
 import { GeocoderAPI } from "../src/adapters/geocode.api";
 import {

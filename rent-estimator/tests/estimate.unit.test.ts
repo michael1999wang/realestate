@@ -1,6 +1,6 @@
+import { MemoryBus } from "@realestate/shared-utils";
+import { MemoryCache } from "@realestate/shared-utils/cache";
 import { beforeEach, describe, expect, it } from "vitest";
-import { MemoryBus } from "../src/adapters/bus.memory";
-import { MemoryCache } from "../src/adapters/cache.memory";
 import { MockCompsSource } from "../src/adapters/comps.source";
 import { MockPriorsSource } from "../src/adapters/priors.source";
 import { MockReadAdapter } from "../src/adapters/read.mock";

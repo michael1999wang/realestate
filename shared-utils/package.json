@@ -55,6 +55,11 @@
       "types": "./dist/worker/index.d.ts",
       "import": "./dist/worker/index.js",
       "require": "./dist/worker/index.js"
+    },
+    "./cache": {
+      "types": "./dist/cache/index.d.ts",
+      "import": "./dist/cache/index.js",
+      "require": "./dist/cache/index.js"
     }
   }
 }

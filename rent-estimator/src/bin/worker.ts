@@ -5,10 +5,12 @@ import { DebounceService } from "../core/debounce";
 import { estimateForListing } from "../core/estimate";
 
 // Adapters
-import { createBus } from "@realestate/shared-utils";
-import { BusAdapter } from "../adapters/bus.adapter";
+import {
+  FullBusAdapter as BusAdapter,
+  createBus,
+} from "@realestate/shared-utils";
+import { MemoryCache } from "@realestate/shared-utils/cache";
 import { RedisBus } from "../adapters/bus.redis";
-import { MemoryCache } from "../adapters/cache.memory";
 import { RedisCache } from "../adapters/cache.redis";
 import { MockCompsSource } from "../adapters/comps.source";
 import { MockPriorsSource } from "../adapters/priors.source";

@@ -5,8 +5,8 @@
  * Run with: npx ts-node scripts/demo.ts
  */
 
+import { MemoryCache } from "@realestate/shared-utils/cache";
 import { LogBus } from "../src/adapters/bus.log";
-import { MemoryCache } from "../src/adapters/cache.memory";
 import { CMHCAPI } from "../src/adapters/cmhc.api";
 import { GeocoderAPI } from "../src/adapters/geocode.api";
 import {

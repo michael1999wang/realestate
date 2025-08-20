@@ -3,6 +3,7 @@ export * from "./bus";
 
 // Re-export all shared utilities
 export * from "./adapters";
+export * from "./cache";
 export * from "./config";
 export * from "./debounce";
 export * from "./versioning";

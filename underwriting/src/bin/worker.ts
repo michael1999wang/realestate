@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
-import { createBus } from "@realestate/shared-utils";
+import {
+  FullBusAdapter as BusAdapter,
+  createBus,
+} from "@realestate/shared-utils";
 import { Pool } from "pg";
-import { BusAdapter } from "../adapters/bus.adapter";
 import { SnapshotsReadAdapter } from "../adapters/read.snapshots";
 import {
   SqlAssumptionsRepo,

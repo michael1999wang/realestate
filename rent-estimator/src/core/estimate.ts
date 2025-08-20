@@ -1,3 +1,4 @@
+import { VERSION as estimatorVersion } from "@realestate/shared-utils";
 import { combineEstimates } from "./combine";
 import { RentEstimate } from "./dto";
 import {
@@ -8,7 +9,6 @@ import {
   ReadPort,
   RentRepoPort,
 } from "./ports";
-import { estimatorVersion } from "./versioning";
 
 export async function estimateForListing(
   id: string,
