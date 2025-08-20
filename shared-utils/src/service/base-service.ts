@@ -5,10 +5,10 @@ import { BusPort } from "../bus/types";
 import { MemoryCache } from "../cache";
 import { ServiceLifecycle } from "./lifecycle";
 import {
+  BaseServiceConfig,
   BusinessLogic,
   HealthCheck,
   Logger,
-  ServiceConfig,
   ServiceDependencies,
   ServiceMetrics,
   ServiceState,
@@ -67,7 +67,7 @@ export class BaseService<
     isHealthy: false,
   };
 
-  constructor(private config: ServiceConfig<TDeps, TEventMap>) {
+  constructor(private config: BaseServiceConfig<TDeps, TEventMap>) {
     this.lifecycle = new ServiceLifecycle(config.shutdownTimeoutMs);
     this.logger = new ConsoleLogger(config.name);
 
@@ -315,7 +315,7 @@ export class BaseService<
         }
       };
 
-      await this.bus.subscribe(subscription.topic as string, wrappedHandler);
+      await this.bus.subscribe(subscription.topic as any, wrappedHandler);
 
       this.logger.info(`Subscribed to ${subscription.topic as string} events`);
     }

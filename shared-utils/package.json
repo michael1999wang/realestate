@@ -45,6 +45,11 @@
       "import": "./dist/cache/index.js",
       "require": "./dist/cache/index.js",
       "types": "./dist/cache/index.d.ts"
+    },
+    "./debounce": {
+      "import": "./dist/debounce/index.js",
+      "require": "./dist/debounce/index.js",
+      "types": "./dist/debounce/index.d.ts"
     }
   }
 }

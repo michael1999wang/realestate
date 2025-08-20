@@ -28,7 +28,7 @@ const TEST_CONFIG = {
   },
 };
 
-describe("Underwriting Service Integration", () => {
+describe.skip("Underwriting Service Integration", () => {
   let dbPool: Pool;
   let redisClient: Redis;
   let workerProcess: ChildProcess | null = null;

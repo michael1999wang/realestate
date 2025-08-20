@@ -7,4 +7,12 @@
 
 export * from "./base-service";
 export * from "./lifecycle";
-export * from "./types";
+export type {
+  BusinessLogic,
+  HealthCheck,
+  Logger,
+  BaseServiceConfig as ServiceConfig,
+  ServiceDependencies,
+  ServiceMetrics,
+  ServiceState,
+} from "./types";

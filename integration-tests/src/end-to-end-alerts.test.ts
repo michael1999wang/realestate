@@ -8,7 +8,11 @@ import {
   UWMetrics,
   UnderwriteCompletedEvt,
 } from "@realestate/alerts/src/core/dto";
-import { createHandlers } from "@realestate/alerts/src/core/handlers";
+import {
+  AlertsBusinessLogic,
+  AlertsDependencies,
+} from "@realestate/alerts/src/service-config";
+import { MemoryBus } from "@realestate/shared-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 // Note: For this demo, we'll simulate the pipeline steps rather than importing
@@ -106,12 +110,13 @@ describe("End-to-End Alerts Integration", () => {
 
     // Step 6: Create alerts handlers and simulate underwrite_completed event
     console.log("🚨 Step 4: Processing alerts...");
-    const alertsHandlers = createHandlers({
-      bus: {} as any,
-      read: readAdapter,
-      repo: alertsRepo,
-      dispatch: dispatcher,
-    });
+    const deps: AlertsDependencies = {
+      bus: new MemoryBus("alerts-test"),
+      repositories: { alerts: alertsRepo },
+      clients: { read: readAdapter, dispatcher },
+      logger: { info: console.log, warn: console.warn, error: console.error },
+    };
+    const alertsBusinessLogic = new AlertsBusinessLogic(deps);
 
     const underwriteEvent: UnderwriteCompletedEvt = {
       id: "C999999",
@@ -122,7 +127,7 @@ describe("End-to-End Alerts Integration", () => {
       ts: new Date().toISOString(),
     };
 
-    await alertsHandlers.onUnderwriteCompleted(underwriteEvent);
+    await alertsBusinessLogic.handleUnderwriteCompleted(underwriteEvent);
 
     // Step 7: Verify alert was triggered
     expect(capturedAlerts).toHaveLength(1);
@@ -187,12 +192,13 @@ describe("End-to-End Alerts Integration", () => {
 
     readAdapter.addMetrics("result-888888", goodMetrics);
 
-    const alertsHandlers = createHandlers({
-      bus: {} as any,
-      read: readAdapter,
-      repo: alertsRepo,
-      dispatch: dispatcher,
-    });
+    const deps: AlertsDependencies = {
+      bus: new MemoryBus("alerts-test"),
+      repositories: { alerts: alertsRepo },
+      clients: { read: readAdapter, dispatcher },
+      logger: { info: console.log, warn: console.warn, error: console.error },
+    };
+    const alertsBusinessLogic = new AlertsBusinessLogic(deps);
 
     const underwriteEvent: UnderwriteCompletedEvt = {
       id: "C888888",
@@ -203,7 +209,7 @@ describe("End-to-End Alerts Integration", () => {
       ts: new Date().toISOString(),
     };
 
-    await alertsHandlers.onUnderwriteCompleted(underwriteEvent);
+    await alertsBusinessLogic.handleUnderwriteCompleted(underwriteEvent);
 
     // Should not trigger any alerts due to price filter
     expect(capturedAlerts).toHaveLength(0);
@@ -275,15 +281,16 @@ describe("End-to-End Alerts Integration", () => {
       cashFlowAnnual: -500,
     });
 
-    const alertsHandlers = createHandlers({
-      bus: {} as any,
-      read: readAdapter,
-      repo: alertsRepo,
-      dispatch: dispatcher,
-    });
+    const deps: AlertsDependencies = {
+      bus: new MemoryBus("alerts-test"),
+      repositories: { alerts: alertsRepo },
+      clients: { read: readAdapter, dispatcher },
+      logger: { info: console.log, warn: console.warn, error: console.error },
+    };
+    const alertsBusinessLogic = new AlertsBusinessLogic(deps);
 
     // Process Toronto property
-    await alertsHandlers.onUnderwriteCompleted({
+    await alertsBusinessLogic.handleUnderwriteCompleted({
       id: "C777777",
       resultId: "result-777777",
       score: 7.8,
@@ -292,7 +299,7 @@ describe("End-to-End Alerts Integration", () => {
     });
 
     // Process Vancouver property with high score
-    await alertsHandlers.onUnderwriteCompleted({
+    await alertsBusinessLogic.handleUnderwriteCompleted({
       id: "C666666",
       resultId: "result-666666",
       score: 8.7, // Above 8.5 threshold

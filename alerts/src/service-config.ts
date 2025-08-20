@@ -2,13 +2,13 @@
  * Alerts Service Configuration using BaseService template
  */
 
-import { BaseService, ServiceConfig } from "@realestate/shared-utils";
+// import { createServiceConfig } from "@realestate/shared-utils/config";
+import { BaseService, ServiceConfig } from "@realestate/shared-utils/service";
 import { Pool } from "pg";
 import { sendDevBrowser } from "./adapters/delivery.devbrowser";
 import { MockReadAdapter } from "./adapters/read.mock";
 import { MemoryAlertsRepo } from "./adapters/repo.memory";
 import { PostgresAlertsRepo } from "./adapters/repo.sql";
-import { cfg } from "./config/env";
 import { MultiChannelDispatcher } from "./core/dispatch";
 
 /**
@@ -63,11 +63,11 @@ export class AlertsBusinessLogic {
 
     // Get all active saved searches
     const savedSearches =
-      await this.deps.repositories.alerts.getActiveSavedSearches();
+      await this.deps.repositories.alerts.listActiveSavedSearches();
 
     for (const search of savedSearches) {
       // Get listing details
-      const listing = await this.deps.clients.read.getListing(event.id);
+      const listing = await this.deps.clients.read.getListingSnapshot(event.id);
       if (!listing) {
         this.deps.logger.warn(
           `Listing ${event.id} not found, skipping alert check`
@@ -76,21 +76,27 @@ export class AlertsBusinessLogic {
       }
 
       // Get underwriting results
-      const result = await this.deps.clients.read.getUnderwriteResult(
+      const metrics = await this.deps.clients.read.getUnderwriteMetrics(
         event.resultId
       );
-      if (!result) {
+      if (!metrics) {
         this.deps.logger.warn(
-          `Result ${event.resultId} not found, skipping alert check`
+          `Metrics ${event.resultId} not found, skipping alert check`
         );
         continue;
       }
 
-      // Check if listing matches search criteria
-      if (
-        this.matchesSearchCriteria(listing, search) &&
-        this.meetsThresholds(result.metrics, search.thresholds)
-      ) {
+      const result = { metrics };
+
+      // Check if listing matches search criteria and thresholds
+      const matchesCriteria = this.matchesSearchCriteria(listing, search);
+      const meetsThresholds = this.meetsThresholds(metrics, search.thresholds);
+      const meetsScoreThreshold =
+        search.thresholds.minScore &&
+        event.score &&
+        event.score >= search.thresholds.minScore;
+
+      if (matchesCriteria && (meetsThresholds || meetsScoreThreshold)) {
         // Create alert
         const alert = {
           id: this.generateAlertId(),
@@ -98,27 +104,61 @@ export class AlertsBusinessLogic {
           listingId: event.id,
           resultId: event.resultId,
           savedSearchId: search.id,
+          payload: {
+            snapshot: listing,
+            metrics: metrics,
+            score: event.score,
+            matched: this.getMatchedThresholds(
+              metrics,
+              search.thresholds,
+              event.score
+            ),
+          },
+          delivery: {
+            channels: search.notify.channel,
+            statusByChannel: {},
+          },
           createdAt: new Date().toISOString(),
         };
 
-        await this.deps.repositories.alerts.createAlert(alert);
+        await this.deps.repositories.alerts.insertAlert(alert);
 
         // Dispatch notifications
-        await this.deps.clients.dispatcher.dispatch({
-          type: "alert_created",
-          data: alert,
-          channels: search.notify.channel,
-        });
+        for (const channel of alert.delivery.channels) {
+          switch (channel) {
+            case "devbrowser":
+              await this.deps.clients.dispatcher.sendDevBrowser(alert);
+              break;
+            case "email":
+              await this.deps.clients.dispatcher.sendEmail(alert);
+              break;
+            case "sms":
+              await this.deps.clients.dispatcher.sendSMS(alert);
+              break;
+            case "slack":
+              await this.deps.clients.dispatcher.sendSlack(alert);
+              break;
+            case "webhook":
+              await this.deps.clients.dispatcher.sendWebhook(alert);
+              break;
+          }
+        }
 
         this.deps.logger.info(
           `Alert created for user ${search.userId}, listing ${event.id}`
         );
 
         // Publish alert fired event
-        await this.deps.bus.publish("alerts_fired", {
-          userId: search.userId,
-          listingId: event.id,
-          resultId: event.resultId,
+        await this.deps.bus.publish({
+          type: "alerts_fired",
+          id: `alert-${alert.id}`,
+          timestamp: new Date().toISOString(),
+          data: {
+            userId: search.userId,
+            listingId: event.id,
+            resultId: event.resultId,
+          },
+          version: "1.0.0",
         });
       }
     }
@@ -162,6 +202,13 @@ export class AlertsBusinessLogic {
    * Check if results meet threshold requirements
    */
   private meetsThresholds(metrics: any, thresholds: any): boolean {
+    // If there are no financial thresholds defined, don't match based on metrics
+    const hasFinancialThresholds =
+      thresholds.minDSCR ||
+      thresholds.minCoC ||
+      thresholds.requireNonNegativeCF;
+    if (!hasFinancialThresholds) return false;
+
     if (thresholds.minDSCR && metrics.dscr < thresholds.minDSCR) return false;
     if (thresholds.minCoC && metrics.cashOnCashPct < thresholds.minCoC)
       return false;
@@ -177,6 +224,32 @@ export class AlertsBusinessLogic {
   private generateAlertId(): string {
     return `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
+
+  /**
+   * Get matched thresholds for display
+   */
+  private getMatchedThresholds(
+    metrics: any,
+    thresholds: any,
+    score?: number
+  ): string[] {
+    const matched: string[] = [];
+
+    if (thresholds.minDSCR && metrics.dscr >= thresholds.minDSCR) {
+      matched.push(`dscr>=${thresholds.minDSCR}`);
+    }
+    if (thresholds.minCoC && metrics.cashOnCashPct >= thresholds.minCoC) {
+      matched.push(`coc>=${thresholds.minCoC}`);
+    }
+    if (thresholds.requireNonNegativeCF && metrics.cashFlowAnnual >= 0) {
+      matched.push("cf>=0");
+    }
+    if (thresholds.minScore && score && score >= thresholds.minScore) {
+      matched.push(`score>=${thresholds.minScore}`);
+    }
+
+    return matched;
+  }
 }
 
 /**
@@ -190,7 +263,7 @@ export const alertsServiceConfig: ServiceConfig<
   version: "1.0.0",
 
   database:
-    cfg.mode === "prod"
+    process.env.NODE_ENV === "production"
       ? {
           schema: "sql/init.sql",
           pool: {
@@ -228,7 +301,7 @@ export const alertsServiceConfig: ServiceConfig<
 
   createRepositories: (pool) => ({
     alerts:
-      cfg.mode === "dev"
+      process.env.NODE_ENV === "development"
         ? new MemoryAlertsRepo([
             // Sample saved search for development
             {

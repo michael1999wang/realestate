@@ -6,7 +6,7 @@ export * from "./adapters";
 export * from "./cache";
 export * from "./config";
 export * from "./debounce";
-export * from "./service";
+// Service module should be imported explicitly from './service' to avoid naming conflicts
 export * from "./versioning";
 export * from "./worker";
 

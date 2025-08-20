@@ -8,8 +8,12 @@ import {
   UWMetrics,
   UnderwriteCompletedEvt,
 } from "@realestate/alerts/src/core/dto";
-import { createHandlers } from "@realestate/alerts/src/core/handlers";
 import { matchSearches } from "@realestate/alerts/src/core/match";
+import {
+  AlertsBusinessLogic,
+  AlertsDependencies,
+} from "@realestate/alerts/src/service-config";
+import { MemoryBus } from "@realestate/shared-utils";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("Alerts Integration Tests", () => {
@@ -139,12 +143,13 @@ describe("Alerts Integration Tests", () => {
 
   describe("End-to-End Alert Flow", () => {
     it("should trigger alerts for matching underwrite_completed events", async () => {
-      const handlers = createHandlers({
-        bus: {} as any, // Not used in this test
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       const event: UnderwriteCompletedEvt = {
         id: "listing-toronto-condo",
@@ -155,7 +160,7 @@ describe("Alerts Integration Tests", () => {
         ts: new Date().toISOString(),
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Should trigger one alert for the Toronto condo search
       expect(capturedAlerts).toHaveLength(1);
@@ -175,12 +180,13 @@ describe("Alerts Integration Tests", () => {
     });
 
     it("should not trigger alerts for non-matching properties", async () => {
-      const handlers = createHandlers({
-        bus: {} as any,
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       // Event for Vancouver house with poor metrics
       const event: UnderwriteCompletedEvt = {
@@ -192,19 +198,20 @@ describe("Alerts Integration Tests", () => {
         ts: new Date().toISOString(),
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Should not trigger any alerts (score too low, metrics poor)
       expect(capturedAlerts).toHaveLength(0);
     });
 
     it("should trigger alerts for score-only matching", async () => {
-      const handlers = createHandlers({
-        bus: {} as any,
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       // Event for Vancouver house with good score
       const event: UnderwriteCompletedEvt = {
@@ -216,7 +223,7 @@ describe("Alerts Integration Tests", () => {
         ts: new Date().toISOString(),
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Should trigger one alert for the Vancouver house search
       expect(capturedAlerts).toHaveLength(1);
@@ -229,12 +236,13 @@ describe("Alerts Integration Tests", () => {
 
     it("should not trigger alerts for inactive searches", async () => {
       // Add an inactive search that would otherwise match
-      const handlers = createHandlers({
-        bus: {} as any,
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       const event: UnderwriteCompletedEvt = {
         id: "listing-toronto-condo",
@@ -243,7 +251,7 @@ describe("Alerts Integration Tests", () => {
         type: "underwrite_completed",
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Should only trigger for active searches
       expect(capturedAlerts).toHaveLength(1);
@@ -251,12 +259,13 @@ describe("Alerts Integration Tests", () => {
     });
 
     it("should handle missing listings gracefully", async () => {
-      const handlers = createHandlers({
-        bus: {} as any,
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       const event: UnderwriteCompletedEvt = {
         id: "non-existent-listing",
@@ -265,7 +274,7 @@ describe("Alerts Integration Tests", () => {
         type: "underwrite_completed",
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Should not trigger any alerts for missing listings
       expect(capturedAlerts).toHaveLength(0);
@@ -379,12 +388,13 @@ describe("Alerts Integration Tests", () => {
 
   describe("Data Persistence", () => {
     it("should persist alerts to repository", async () => {
-      const handlers = createHandlers({
-        bus: {} as any,
-        read: readAdapter,
-        repo,
-        dispatch: dispatcher,
-      });
+      const deps: AlertsDependencies = {
+        bus: new MemoryBus("alerts-test"),
+        repositories: { alerts: repo },
+        clients: { read: readAdapter, dispatcher },
+        logger: { info: console.log, warn: console.warn, error: console.error },
+      };
+      const businessLogic = new AlertsBusinessLogic(deps);
 
       const event: UnderwriteCompletedEvt = {
         id: "listing-toronto-condo",
@@ -393,7 +403,7 @@ describe("Alerts Integration Tests", () => {
         type: "underwrite_completed",
       };
 
-      await handlers.onUnderwriteCompleted(event);
+      await businessLogic.handleUnderwriteCompleted(event);
 
       // Check that alert was persisted
       const persistedAlerts = repo.getAlerts();

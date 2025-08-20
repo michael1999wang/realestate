@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * New Alerts Service Worker using BaseService template
- *
- * This demonstrates how dramatically simplified service workers become
- * when using the BaseService template.
- *
- * Compare this to the original worker.ts - it's ~90% less code!
+ * Alerts Service Worker using BaseService template
  */
 
 import { AlertsService } from "../service-config";
