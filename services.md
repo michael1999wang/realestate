@@ -39,11 +39,6 @@
 - **Outputs/Events**: `alert_fired` + sends email/SMS/Slack/web-push
 - **Storage**: saved_searches, assumption_sets, alerts
 
-## 6. Web App (Dashboard)
-
-- **Role**: Next.js app for search, detail view, sensitivity sliders, saved searches, alerts
-- **Consumes**: Direct service APIs
-
 ## 7. Notifications
 
 - **Role**: Email/SMS/Slack/web-push delivery; templates & retries
@@ -123,7 +118,7 @@
 - Enrichment (light) + Rent Estimator (priors)
 - Underwriting (grid + exact cache)
 - Alerts (email only)
-- API Gateway + Web App (search/detail, save 1–2 searches)
+- API Gateway (search/detail, save 1–2 searches)
 
 ## v1 Slice (Month 1)
 
@@ -140,7 +135,7 @@
 - **Ingestor → Bus**: publishes `listing_changed`
 - **Enrichment/Rent → Repo**: write enrichments, rent_estimates
 - **Alerts → Notifications**: `sendEmail|sendSMS|sendSlack(payload)` with idempotency key
-- **Web App → Services**: direct API calls to services; pulls latest underwrite_grid or computes exact on-demand and caches
+- **API Clients → Services**: direct API calls to services; pulls latest underwrite_grid or computes exact on-demand and caches
 
 ---
 
@@ -152,7 +147,7 @@ Split along data lifecycle:
 - **Intelligence**: Enrich/rent/vision services
 - **Underwriting**: Core calculation engine
 - **Growth**: Alerts/billing/user management
-- **Frontend**: Web + BFF
+- **Frontend**: API clients
 - **Platform**: Infra, queues, observability
 
 ---

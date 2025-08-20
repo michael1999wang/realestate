@@ -4,7 +4,7 @@
 
 ## Core idea
 
-    •	We run multiple independent services (Ingestor, Enrichment, Rent Estimator, Underwriting, Alerts, Web App/BFF).
+    •	We run multiple independent services (Ingestor, Enrichment, Rent Estimator, Underwriting, Alerts).
     •	They communicate asynchronously via one shared event bus per environment (dev/stage/prod).
     •	Each service publishes and subscribes to specific topics on the same bus (Redis Streams in dev), using consumer groups for scaling and at-least-once delivery.
 
@@ -71,10 +71,6 @@ alerts.fired
    • Work: match against saved_searches (filters + thresholds), create alert records
    • Publishes: `alerts.fired { userId, listingId, resultId }`
    • Dev delivery: also pushes to SSE browser page
-
-6. **Web App / BFF (HTTP, not on bus)**
-   • Calls: read APIs (search listings, detail), on-demand /underwrite (exact)
-   • Listens (dev only): SSE endpoint from Alerts service for live alert cards
 
 ## Local dev (single shared bus)
 

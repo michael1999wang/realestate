@@ -2,9 +2,9 @@
   "name": "@realestate/ingestor",
   "version": "1.0.0",
   "description": "Real estate listing ingestor for TRREB/CREA data",
-  "main": "src/bin/start.ts",
+  "main": "src/bin/worker.ts",
   "scripts": {
-    "dev": "ts-node src/bin/start.ts",
+    "dev": "ts-node src/bin/worker.ts",
     "dev:full": "npm run start:all",
     "start:all": "node scripts/start-all.js",
     "start:db": "docker compose up -d db",

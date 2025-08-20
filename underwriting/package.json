@@ -4,6 +4,7 @@
   "description": "Investment metrics computation service for real estate listings",
   "main": "dist/bin/worker.js",
   "scripts": {
+    "dev": "ts-node src/bin/worker.ts",
     "dev:worker": "ts-node src/bin/worker.ts",
     "dev:api": "ts-node src/bin/api.ts",
     "build": "tsc",

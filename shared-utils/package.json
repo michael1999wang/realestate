@@ -27,27 +27,22 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./service": {
-      "import": "./dist/service/index.js",
       "require": "./dist/service/index.js",
       "types": "./dist/service/index.d.ts"
     },
     "./bus": {
-      "import": "./dist/bus/index.js",
       "require": "./dist/bus/index.js",
       "types": "./dist/bus/index.d.ts"
     },
     "./cache": {
-      "import": "./dist/cache/index.js",
       "require": "./dist/cache/index.js",
       "types": "./dist/cache/index.d.ts"
     },
     "./debounce": {
-      "import": "./dist/debounce/index.js",
       "require": "./dist/debounce/index.js",
       "types": "./dist/debounce/index.d.ts"
     }

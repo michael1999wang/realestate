@@ -1,3 +1,26 @@
+# Real Estate Microservices Platform
+
+## �� Quick Demo
+
+**Want to see the platform in action?** Start with our comprehensive demo GUI:
+
+```bash
+# Install all dependencies (including demo)
+npm run install:all
+
+# Start the demo GUI
+npm run dev:demo
+```
+
+Then open [http://localhost:3000](http://localhost:3000) to explore:
+- Real-time property listings feed
+- Data enrichment pipeline visualization  
+- Investment analysis dashboard
+- Saved searches and live alerts
+- System monitoring
+
+---
+
 # Real Estate Microservices
 
 A comprehensive microservices ecosystem for real estate data processing and enrichment.

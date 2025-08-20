@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+  }
+
+  .btn-success {
+    @apply bg-success-600 text-white hover:bg-success-700;
+  }
+
+  .btn-danger {
+    @apply bg-danger-600 text-white hover:bg-danger-700;
+  }
+
+  .status-active {
+    @apply bg-success-50 text-success-700 ring-success-600/20;
+  }
+
+  .status-sold {
+    @apply bg-blue-50 text-blue-700 ring-blue-600/20;
+  }
+
+  .status-suspended {
+    @apply bg-warning-50 text-warning-700 ring-warning-600/20;
+  }
+
+  .status-expired {
+    @apply bg-gray-50 text-gray-700 ring-gray-600/20;
+  }
+}
+
+@layer utilities {
+  .text-money {
+    @apply font-mono font-semibold;
+  }
+
+  .pulse-dot {
+    @apply w-2 h-2 bg-green-500 rounded-full animate-pulse;
+  }
+
+  .metric-positive {
+    @apply text-success-600;
+  }
+
+  .metric-negative {
+    @apply text-danger-600;
+  }
+
+  .metric-neutral {
+    @apply text-gray-600;
+  }
+}

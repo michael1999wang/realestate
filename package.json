@@ -10,8 +10,8 @@
     "rent-estimator",
     "underwriting",
     "alerts",
-    "web",
-    "integration-tests"
+    "integration-tests",
+    "demo-web"
   ],
   "scripts": {
     "test:ingestor": "cd ingestor && npm test",
@@ -19,24 +19,24 @@
     "test:rent-estimator": "cd rent-estimator && npm test",
     "test:underwriting": "cd underwriting && npm test",
     "test:alerts": "cd alerts && npm test",
-    "test:web": "cd web && npm run lint && npm run type-check",
     "test:integration": "cd integration-tests && npm run test:working",
-    "test:all": "npm run test:ingestor && npm run test:enrichment && npm run test:rent-estimator && npm run test:underwriting && npm run test:alerts && npm run test:web && npm run test:integration",
+    "test:all": "npm run test:ingestor && npm run test:enrichment && npm run test:rent-estimator && npm run test:underwriting && npm run test:alerts && npm run test:integration",
     "install:all": "npm install && npm run install:services",
-    "install:services": "cd ingestor && npm install && cd ../enrichment && npm install && cd ../rent-estimator && npm install && cd ../underwriting && npm install && cd ../alerts && npm install && cd ../web && npm install && cd ../integration-tests && npm install",
-    "build:all": "cd ingestor && npm run build && cd ../enrichment && npm run build && cd ../rent-estimator && npm run build && cd ../underwriting && npm run build && cd ../alerts && npm run build && cd ../web && npm run build",
+    "install:services": "cd ingestor && npm install && cd ../enrichment && npm install && cd ../rent-estimator && npm install && cd ../underwriting && npm install && cd ../alerts && npm install && cd ../integration-tests && npm install && cd ../demo-web && npm install",
+    "build:all": "cd ingestor && npm run build && cd ../enrichment && npm run build && cd ../rent-estimator && npm run build && cd ../underwriting && npm run build && cd ../alerts && npm run build",
     "dev:ingestor": "cd ingestor && npm run dev",
     "dev:enrichment": "cd enrichment && npm run dev",
     "dev:rent-estimator": "cd rent-estimator && npm run dev",
     "dev:underwriting": "cd underwriting && npm run dev",
     "dev:alerts": "cd alerts && npm run dev",
     "dev:alerts:http": "cd alerts && npm run dev:http",
-    "dev:web": "cd web && npm run dev",
-    "dev:all": "npm run docker:up && sleep 5 && concurrently \"npm run dev:ingestor\" \"npm run dev:enrichment\" \"npm run dev:rent-estimator\" \"npm run dev:underwriting\" \"npm run dev:alerts\" \"npm run dev:web\"",
+    "dev:demo": "cd demo-web && npm run dev",
+    "dev:all": "npm run docker:up && sleep 5 && concurrently \"npm run dev:ingestor\" \"npm run dev:enrichment\" \"npm run dev:rent-estimator\" \"npm run dev:underwriting\" \"npm run dev:alerts\"",
     "docker:up": "cd ingestor && docker compose up -d && cd ../enrichment && docker compose up -d && cd ../rent-estimator && docker compose up -d && cd ../underwriting && docker compose up -d && cd ../alerts && docker compose up -d",
     "docker:down": "cd ingestor && docker compose down && cd ../enrichment && docker compose down && cd ../rent-estimator && docker compose down && cd ../underwriting && docker compose down && cd ../alerts && docker compose down",
+    "clean": "rm -rf node_modules && rm -rf shared-utils/node_modules shared-utils/dist && rm -rf ingestor/node_modules ingestor/dist && rm -rf enrichment/node_modules enrichment/dist && rm -rf rent-estimator/node_modules rent-estimator/dist && rm -rf underwriting/node_modules underwriting/dist && rm -rf alerts/node_modules alerts/dist && rm -rf integration-tests/node_modules integration-tests/dist",
     "start:alerts-dev": "npm run dev:alerts:http",
-    "help": "echo 'Available commands:' && echo '  npm run test:all          - Run all tests' && echo '  npm run test:<service>    - Test individual service' && echo '  npm run dev:all           - Start all services in dev mode' && echo '  npm run dev:<service>     - Start individual service' && echo '  npm run start:alerts-dev - Start alerts dev server (http://localhost:8082)' && echo '  npm run docker:up/down    - Manage Docker services'"
+    "help": "echo 'Available commands:' && echo '  npm run test:all          - Run all tests' && echo '  npm run test:<service>    - Test individual service' && echo '  npm run dev:all           - Start all services in dev mode' && echo '  npm run dev:<service>     - Start individual service' && echo '  npm run dev:demo          - Start demo GUI (http://localhost:3000)' && echo '  npm run start:alerts-dev - Start alerts dev server (http://localhost:8082)' && echo '  npm run clean             - Remove all node_modules and build artifacts' && echo '  npm run docker:up/down    - Manage Docker services'"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
