@@ -6,11 +6,16 @@
  */
 
 import { Pool } from "pg";
+import { serviceDatabases } from "../config/env";
 import { Listing, PropertySearchRequest } from "../core/dto";
 import { ListingReadPort } from "../core/ports";
 
 export class ListingsReadAdapter implements ListingReadPort {
-  constructor(private db: Pool) {}
+  private db: Pool;
+
+  constructor(db?: Pool) {
+    this.db = db || new Pool(serviceDatabases.ingestor);
+  }
 
   async findById(id: string): Promise<Listing | null> {
     const query = `
@@ -21,11 +26,7 @@ export class ListingsReadAdapter implements ListingReadPort {
         status,
         listed_at as "listedAt",
         updated_at as "updatedAt",
-        street,
-        city,
-        province,
-        postal_code as "postalCode",
-        country,
+        address,
         property_type as "propertyType",
         beds,
         baths,
@@ -33,9 +34,8 @@ export class ListingsReadAdapter implements ListingReadPort {
         list_price as "listPrice",
         taxes_annual as "taxesAnnual",
         condo_fee_monthly as "condoFeeMonthly",
-        photos,
-        brokerage_name as "brokerageName",
-        brokerage_phone as "brokeragePhone"
+        media,
+        brokerage
       FROM listings 
       WHERE id = $1 AND status != 'Deleted'
     `;
@@ -215,34 +215,96 @@ export class ListingsReadAdapter implements ListingReadPort {
    * Map database row to Listing DTO
    */
   private mapRowToListing(row: any): Listing {
+    // Parse JSONB fields
+    const address =
+      typeof row.address === "string" ? JSON.parse(row.address) : row.address;
+    const media =
+      typeof row.media === "string" ? JSON.parse(row.media) : row.media;
+    const brokerage =
+      typeof row.brokerage === "string"
+        ? JSON.parse(row.brokerage)
+        : row.brokerage;
+
     return {
       id: row.id,
       mlsNumber: row.mlsNumber,
       sourceBoard: row.sourceBoard,
-      status: row.status,
+      status: this.mapStatus(row.status),
       listedAt: row.listedAt,
       updatedAt: row.updatedAt,
       address: {
-        street: row.street,
-        city: row.city,
-        province: row.province,
-        postalCode: row.postalCode,
-        country: row.country,
+        street:
+          address?.street ||
+          `${address?.streetNumber || ""} ${address?.streetName || ""}`.trim(),
+        city: address?.city || "",
+        province: address?.province || "ON",
+        postalCode: address?.postalCode || "",
+        country: address?.country || "Canada",
       },
-      propertyType: row.propertyType,
+      propertyType: this.mapPropertyType(row.propertyType),
       beds: row.beds,
       baths: row.baths,
       sqft: row.sqft,
       listPrice: row.listPrice,
       taxesAnnual: row.taxesAnnual,
       condoFeeMonthly: row.condoFeeMonthly,
-      media: row.photos ? { photos: row.photos } : undefined,
-      brokerage: row.brokerageName
+      media:
+        media?.length > 0
+          ? { photos: media.map((m: any) => m.MediaURL || m.url || m) }
+          : undefined,
+      brokerage: brokerage
         ? {
-            name: row.brokerageName,
-            phone: row.brokeragePhone,
+            name: brokerage.name || brokerage.Name,
+            phone: brokerage.phone || brokerage.Phone,
           }
         : undefined,
     };
+  }
+
+  /**
+   * Map status codes to standard format
+   */
+  private mapStatus(
+    status: string
+  ): "Active" | "Sold" | "Suspended" | "Expired" {
+    switch (status) {
+      case "A":
+        return "Active";
+      case "Sld":
+        return "Sold";
+      case "Sus":
+        return "Suspended";
+      case "Exp":
+        return "Expired";
+      default:
+        return "Active";
+    }
+  }
+
+  /**
+   * Map property types to standard format
+   */
+  private mapPropertyType(
+    propertyType: string
+  ): "Condo" | "House" | "Townhouse" {
+    if (
+      propertyType.toLowerCase().includes("condo") ||
+      propertyType.toLowerCase().includes("apartment")
+    ) {
+      return "Condo";
+    }
+    if (
+      propertyType.toLowerCase().includes("detached") ||
+      propertyType.toLowerCase().includes("house")
+    ) {
+      return "House";
+    }
+    if (
+      propertyType.toLowerCase().includes("town") ||
+      propertyType.toLowerCase().includes("semi")
+    ) {
+      return "Townhouse";
+    }
+    return "Condo"; // Default
   }
 }

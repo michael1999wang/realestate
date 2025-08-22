@@ -3,6 +3,9 @@
 -- Enable UUID extension if needed
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Enable pg_trgm extension for GIN text indexes
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
 -- Listings table
 CREATE TABLE IF NOT EXISTS listings (
   id TEXT PRIMARY KEY,
@@ -38,7 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_listings_updated_at ON listings(updated_at);
 CREATE INDEX IF NOT EXISTS idx_listings_status ON listings(status);
 CREATE INDEX IF NOT EXISTS idx_listings_source_board ON listings(source_board);
 CREATE INDEX IF NOT EXISTS idx_listings_mls_number ON listings(mls_number) WHERE mls_number IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_listings_address_city ON listings USING GIN ((address->>'city'));
+CREATE INDEX IF NOT EXISTS idx_listings_address_city ON listings USING GIN ((address->>'city') gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_listings_property_type ON listings(property_type);
 CREATE INDEX IF NOT EXISTS idx_listings_list_price ON listings(list_price);
 
@@ -52,6 +55,7 @@ END;
 $$ language 'plpgsql';
 
 -- Trigger to automatically update updated_row_at
+DROP TRIGGER IF EXISTS update_listings_updated_row_at ON listings;
 CREATE TRIGGER update_listings_updated_row_at 
     BEFORE UPDATE ON listings 
     FOR EACH ROW 

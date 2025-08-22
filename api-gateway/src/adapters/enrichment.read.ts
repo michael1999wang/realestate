@@ -6,11 +6,16 @@
  */
 
 import { Pool } from "pg";
+import { serviceDatabases } from "../config/env";
 import { Enrichment } from "../core/dto";
 import { EnrichmentReadPort } from "../core/ports";
 
 export class EnrichmentReadAdapter implements EnrichmentReadPort {
-  constructor(private db: Pool) {}
+  private db: Pool;
+
+  constructor(db?: Pool) {
+    this.db = db || new Pool(serviceDatabases.enrichment);
+  }
 
   async findByListingId(listingId: string): Promise<Enrichment | null> {
     const query = `

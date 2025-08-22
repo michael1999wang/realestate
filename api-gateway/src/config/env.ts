@@ -10,6 +10,10 @@ interface DatabaseConfig {
   database: string;
 }
 
+interface ServiceDatabaseConfig {
+  [serviceName: string]: DatabaseConfig;
+}
+
 interface RedisConfig {
   host: string;
   port: number;
@@ -36,13 +40,74 @@ interface RateLimitConfig {
   enterprise: { requests: number };
 }
 
-// Database Configuration
+// Database Configuration for API Gateway's own database (users, sessions, etc.)
 export const dbCfg: DatabaseConfig = {
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT || "5432"),
   user: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_NAME || "api_gateway",
+};
+
+// Service Database Configurations (each service has its own database)
+export const serviceDatabases: ServiceDatabaseConfig = {
+  ingestor: {
+    host: process.env.INGESTOR_DB_HOST || process.env.DB_HOST || "localhost",
+    port: parseInt(
+      process.env.INGESTOR_DB_PORT || process.env.DB_PORT || "5432"
+    ),
+    user: process.env.INGESTOR_DB_USER || process.env.DB_USER || "postgres",
+    password:
+      process.env.INGESTOR_DB_PASSWORD || process.env.DB_PASSWORD || "password",
+    database: process.env.INGESTOR_DB_NAME || "ingestor",
+  },
+  enrichment: {
+    host: process.env.ENRICHMENT_DB_HOST || process.env.DB_HOST || "localhost",
+    port: parseInt(
+      process.env.ENRICHMENT_DB_PORT || process.env.DB_PORT || "5432"
+    ),
+    user: process.env.ENRICHMENT_DB_USER || process.env.DB_USER || "postgres",
+    password:
+      process.env.ENRICHMENT_DB_PASSWORD ||
+      process.env.DB_PASSWORD ||
+      "password",
+    database: process.env.ENRICHMENT_DB_NAME || "enrichment",
+  },
+  rentEstimator: {
+    host:
+      process.env.RENT_ESTIMATOR_DB_HOST || process.env.DB_HOST || "localhost",
+    port: parseInt(
+      process.env.RENT_ESTIMATOR_DB_PORT || process.env.DB_PORT || "5432"
+    ),
+    user:
+      process.env.RENT_ESTIMATOR_DB_USER || process.env.DB_USER || "postgres",
+    password:
+      process.env.RENT_ESTIMATOR_DB_PASSWORD ||
+      process.env.DB_PASSWORD ||
+      "password",
+    database: process.env.RENT_ESTIMATOR_DB_NAME || "rent_estimator",
+  },
+  underwriting: {
+    host:
+      process.env.UNDERWRITING_DB_HOST || process.env.DB_HOST || "localhost",
+    port: parseInt(
+      process.env.UNDERWRITING_DB_PORT || process.env.DB_PORT || "5432"
+    ),
+    user: process.env.UNDERWRITING_DB_USER || process.env.DB_USER || "postgres",
+    password:
+      process.env.UNDERWRITING_DB_PASSWORD ||
+      process.env.DB_PASSWORD ||
+      "password",
+    database: process.env.UNDERWRITING_DB_NAME || "underwriting",
+  },
+  alerts: {
+    host: process.env.ALERTS_DB_HOST || process.env.DB_HOST || "localhost",
+    port: parseInt(process.env.ALERTS_DB_PORT || process.env.DB_PORT || "5432"),
+    user: process.env.ALERTS_DB_USER || process.env.DB_USER || "postgres",
+    password:
+      process.env.ALERTS_DB_PASSWORD || process.env.DB_PASSWORD || "password",
+    database: process.env.ALERTS_DB_NAME || "alerts",
+  },
 };
 
 // Redis Configuration

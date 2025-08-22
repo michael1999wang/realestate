@@ -6,7 +6,7 @@
  */
 
 import { Pool } from "pg";
-import { serviceCfg } from "../config/env";
+import { serviceCfg, serviceDatabases } from "../config/env";
 import {
   UnderwriteRequest,
   UnderwriteResponse,
@@ -17,10 +17,13 @@ import { UnderwritingReadPort, UnderwritingServicePort } from "../core/ports";
 export class UnderwritingServiceClient
   implements UnderwritingServicePort, UnderwritingReadPort
 {
-  constructor(
-    private db: Pool,
-    private httpClient: HttpClient = new DefaultHttpClient()
-  ) {}
+  private db: Pool;
+  private httpClient: HttpClient;
+
+  constructor(db?: Pool, httpClient: HttpClient = new DefaultHttpClient()) {
+    this.db = db || new Pool(serviceDatabases.underwriting);
+    this.httpClient = httpClient;
+  }
 
   // ===== Service Client Methods (Synchronous API calls) =====
 

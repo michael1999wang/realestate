@@ -1,6 +1,6 @@
 -- Enrichment Service Database Schema
 
-CREATE TABLE enrichments (
+CREATE TABLE IF NOT EXISTS enrichments (
   listing_id TEXT PRIMARY KEY,
   listing_version INT NOT NULL,
   enrichment_version TEXT NOT NULL,
@@ -15,14 +15,14 @@ CREATE TABLE enrichments (
 );
 
 -- Indexes for common query patterns
-CREATE INDEX ON enrichments ((rent_priors->>'p50'));
-CREATE INDEX ON enrichments ((cost_rules->>'lttRule'));
-CREATE INDEX ON enrichments (enrichment_version);
-CREATE INDEX ON enrichments (computed_at);
+CREATE INDEX IF NOT EXISTS idx_enrichments_rent_priors_p50 ON enrichments ((rent_priors->>'p50'));
+CREATE INDEX IF NOT EXISTS idx_enrichments_cost_rules_ltt ON enrichments ((cost_rules->>'lttRule'));
+CREATE INDEX IF NOT EXISTS idx_enrichments_version ON enrichments (enrichment_version);
+CREATE INDEX IF NOT EXISTS idx_enrichments_computed_at ON enrichments (computed_at);
 
 -- GIN index for full JSONB searches if needed
-CREATE INDEX enrichments_geo_gin ON enrichments USING GIN (geo);
-CREATE INDEX enrichments_rent_priors_gin ON enrichments USING GIN (rent_priors);
+CREATE INDEX IF NOT EXISTS idx_enrichments_geo_gin ON enrichments USING GIN (geo);
+CREATE INDEX IF NOT EXISTS idx_enrichments_rent_priors_gin ON enrichments USING GIN (rent_priors);
 
 -- Update trigger for updated_row_at
 CREATE OR REPLACE FUNCTION update_updated_row_at_column()
@@ -33,6 +33,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_enrichments_updated_row_at ON enrichments;
 CREATE TRIGGER update_enrichments_updated_row_at 
     BEFORE UPDATE ON enrichments 
     FOR EACH ROW EXECUTE FUNCTION update_updated_row_at_column();

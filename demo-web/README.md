@@ -1,213 +1,236 @@
-# Real Estate Investment Platform - Demo GUI
+# Real Estate Demo Web Application
 
-A comprehensive web application that demonstrates the real estate microservices ecosystem, showcasing the complete flow from listing ingestion to investment analysis and alerts.
+A React-based web application that demonstrates the complete real estate microservices pipeline through an intuitive dashboard interface.
 
-## Features
+## 🎯 What This Demo Shows
 
-### 🏠 Real-time Listings Feed
+This demo showcases the **end-to-end data flow** through the microservices architecture:
 
-- Live property data from TREB/CREA sources
-- Advanced filtering and search capabilities
-- Property details with photos and specifications
+1. **Ingestor** - Ingests property listings from MLS data feeds
+2. **Enrichment** - Adds geo-location, tax data, and market insights
+3. **Rent Estimator** - Calculates rental income estimates
+4. **Underwriting** - Performs investment analysis and metrics
+5. **Alerts** - Matches properties against user criteria
+6. **API Gateway** - Composes data for the web interface
 
-### 🔄 Enrichment Pipeline Visualization
+## 🚀 Quick Start (Integrated Pipeline)
 
-- Step-by-step data enhancement process
-- Geocoding, tax estimation, and location scoring
-- Real-time progress tracking
+### Option 1: Complete Demo Setup (Recommended)
 
-### 💰 Investment Analysis Dashboard
+This sets up the **entire pipeline** with real data flow:
 
-- Comprehensive underwriting metrics (NOI, DSCR, CoC, Cap Rate)
-- Scenario analysis with different rent projections
-- Interactive charts and financial breakdowns
+```bash
+# From the project root
+npm run setup:demo
+```
 
-### 🔍 Saved Searches & Alerts
+This command will:
 
-- Custom investment criteria management
-- Multi-channel notification system
-- Real-time alert monitoring
+- ✅ Start all databases and Redis with Docker
+- ✅ Run database migrations for all services
+- ✅ Seed the ingestor with mock data
+- ✅ Start all microservices
+- ✅ Trigger the data pipeline to flow data through all services
+- ✅ Start the API Gateway
+- ✅ Verify data flow
 
-### 📊 System Status Monitor
+Then start the web app:
 
-- Microservices health monitoring
-- Performance metrics and error tracking
-- Real-time system status updates
+```bash
+npm run dev:demo
+```
 
-## Architecture
+Visit: **http://localhost:3000**
 
-The demo showcases a complete microservices ecosystem:
+### Option 2: Demo Web App Only (Mock Data)
 
-- **Ingestor Service**: Polls and normalizes MLS data
-- **Enrichment Service**: Adds location scores, taxes, and market data
-- **Rent Estimator**: Calculates market rent using comparables
-- **Underwriting Service**: Computes investment metrics
-- **Alerts Service**: Matches properties to user criteria
+If you want to run just the web interface with mock data:
 
-All services communicate via Redis event bus with real-time updates.
+```bash
+cd demo-web
+npm run dev:with-mock  # Starts both mock server and web app
+```
 
-## Quick Start
+Visit: **http://localhost:3000**
 
-### Prerequisites
+## 📊 Demo Features
 
-- Node.js 18+
-- npm or yarn
+### Real-Time Listings Feed
 
-### Installation
+- Live property listings flowing through the pipeline
+- Property cards with key metrics
+- Real-time updates via Server-Sent Events
 
-1. **Install dependencies:**
+### Enrichment Pipeline Visualization
 
-   ```bash
-   npm install
-   ```
+- Shows data enhancement stages
+- Geo-coding, tax assessment, location scoring
+- Market rent estimates and comparable analysis
 
-2. **Start the demo:**
+### Investment Analysis Dashboard
 
-   ```bash
-   npm run dev
-   ```
+- Comprehensive underwriting metrics
+- Cap rates, cash flow, debt coverage ratios
+- Scenario analysis with different assumptions
 
-3. **Access the application:**
-   - Open [http://localhost:3000](http://localhost:3000)
-   - The API mock server runs on port 8080
+### Saved Searches & Alerts
 
-### Available Scripts
+- Custom search criteria management
+- Investment threshold configuration
+- Real-time notifications when matches are found
 
-- `npm run dev` - Start both client and server in development mode
-- `npm run dev:client` - Start only the React frontend
-- `npm run dev:server` - Start only the API mock server
-- `npm run build` - Build for production
-- `npm run preview` - Preview the production build
+### Live Alerts
 
-## Demo Data
+- Property alerts based on investment criteria
+- Real-time notifications
+- Alert management and dismissal
 
-The application includes realistic mock data for:
+### System Monitor
 
-- **4 Sample Properties** across Toronto, Vancouver, and Calgary
-- **Enrichment Data** with location scores, taxes, and rent estimates
-- **Investment Analysis** with multiple scenarios and metrics
-- **Saved Searches** with different investment criteria
-- **Real-time Alerts** demonstrating the notification system
+- Live system health monitoring
+- Service status and performance metrics
+- Event processing statistics
 
-## Key Demonstration Flows
+## 🏗️ Architecture Integration
 
-### 1. Listing to Analysis Flow
+The demo web app integrates with the **complete microservices pipeline**:
 
-1. Browse the **Listings Feed** to see incoming properties
-2. View the **Enrichment Pipeline** to see data enhancement
-3. Analyze investment metrics in **Investment Analysis**
-4. Set up alerts in **Saved Searches**
+```
+┌─────────────────────────────────────────────────────┐
+│                 Demo Web App                        │
+│               (React Frontend)                      │
+└──────────────────┬──────────────────────────────────┘
+                   │ HTTP Requests
+┌─────────────────────────────────────────────────────┐
+│                API Gateway                          │
+│          (Backend-for-Frontend)                     │
+└──────────────────┬──────────────────────────────────┘
+                   │ Reads from Multiple DBs
+        ┌──────────┼──────────┬──────────┬──────────┐
+        │          │          │          │          │
+   ┌────▼───┐ ┌───▼───┐ ┌────▼───┐ ┌────▼───┐ ┌───▼───┐
+   │Ingestor│ │Enrich │ │ Rent   │ │Under-  │ │Alerts │
+   │   DB   │ │  DB   │ │Est. DB │ │writing │ │  DB   │
+   │        │ │       │ │        │ │   DB   │ │       │
+   └────────┘ └───────┘ └────────┘ └────────┘ └───────┘
+```
 
-### 2. Real-time Monitoring
+## 🔧 Development Mode Options
 
-1. Enable real-time updates in **Live Alerts**
-2. Monitor system health in **System Monitor**
-3. Watch new listings appear automatically
-4. Receive investment match notifications
+### Full Pipeline Development
 
-### 3. Investment Criteria Setup
+```bash
+# Start all services and databases
+npm run setup:demo
 
-1. Create saved searches with specific criteria
-2. Set financial thresholds (DSCR, CoC, Cap Rate)
-3. Configure notification channels
-4. Monitor matching properties in real-time
+# In another terminal, start the web app
+npm run dev:demo
+```
 
-## Technical Features
+### Frontend-Only Development
 
-### Real-time Updates
+```bash
+# Start just the web app with mock data
+cd demo-web
+npm run dev:with-mock
+```
 
-- Server-Sent Events (SSE) simulation
-- Live property feed updates
-- Real-time alert notifications
-- System health monitoring
+### API Gateway Development
 
-### Responsive Design
+```bash
+# Start just API Gateway + databases
+npm run docker:up
+npm run dev:api-gateway
 
-- Mobile-friendly interface
-- Modern UI with Tailwind CSS
-- Interactive charts with Recharts
-- Accessible components
+# Start web app pointing to API Gateway
+npm run dev:demo
+```
 
-### Data Visualization
+## 🌐 API Integration
 
-- Investment metric charts
-- Scenario comparison graphs
-- System performance monitoring
-- Pipeline progress tracking
+The demo web app makes HTTP requests to the API Gateway at:
 
-## Mock API Endpoints
+- **API Base URL**: `http://localhost:8080/api/v1`
+- **Health Check**: `http://localhost:8080/health`
+- **System Status**: `http://localhost:8080/api/v1/system/status`
 
-The demo includes a complete mock API that simulates:
+### Key Endpoints Used:
 
-- `/api/listings` - Property listings management
-- `/api/enrichments` - Data enrichment results
-- `/api/underwriting` - Investment analysis
-- `/api/searches` - Saved search management
-- `/api/alerts` - Alert notifications
-- `/api/system` - System health monitoring
+- `GET /api/v1/properties` - Property search
+- `GET /api/v1/properties/:id` - Property details with full analysis
+- `POST /api/v1/underwrite` - Trigger investment calculation
+- `GET /api/v1/searches` - Saved searches management
+- `GET /api/v1/alerts` - User alerts and notifications
 
-## Customization
+## 📱 Demo Scenarios
 
-### Adding New Data
+### Property Investment Flow
 
-Modify `src/data/mockData.ts` to add:
+1. **Browse Properties** - See listings in the feed
+2. **View Analysis** - Click a property to see full investment metrics
+3. **Create Criteria** - Set up saved searches with investment thresholds
+4. **Receive Alerts** - Get notified when properties match your criteria
+5. **Monitor System** - Watch the pipeline process data in real-time
 
-- New property listings
-- Additional enrichment data
-- Custom investment scenarios
-- System health metrics
+### Pipeline Demonstration
 
-### Extending Features
+1. **Data Ingestion** - New listings appear in the feed
+2. **Enrichment** - Watch properties get enhanced with location data
+3. **Rent Analysis** - See rental estimates calculated
+4. **Underwriting** - View investment metrics computed
+5. **Alert Generation** - Properties trigger user alerts
 
-The codebase is structured for easy extension:
+## 🔍 What Makes This Special
 
-- Add new pages in `src/pages/`
-- Create reusable components in `src/components/`
-- Extend API services in `src/services/`
-- Add new data types in `src/types/`
+Unlike typical demos with static data, this showcases:
 
-## Integration with Real Services
+✨ **Real Event-Driven Architecture** - Data flows through actual microservices
+✨ **Asynchronous Processing** - See data transformation in real-time
+✨ **Service Independence** - Each service owns its data and responsibilities  
+✨ **Production-Like Flow** - Mirrors how the system works in production
+✨ **API Gateway Pattern** - Demonstrates proper BFF (Backend-for-Frontend) usage
 
-To connect with actual microservices:
+## 🛠️ Troubleshooting
 
-1. Update `src/services/api.ts` to use real endpoints
-2. Replace mock data with actual API calls
-3. Configure real-time event sources (WebSocket/SSE)
-4. Update authentication and authorization
+### Services Won't Start
 
-## Technologies Used
+```bash
+# Check Docker services
+docker ps
 
-- **Frontend**: React 18, TypeScript, Tailwind CSS
-- **Routing**: React Router 6
-- **Charts**: Recharts
-- **Icons**: Lucide React
-- **Build Tool**: Vite
-- **Date Handling**: date-fns
+# Restart Docker services
+npm run docker:down && npm run docker:up
+```
 
-## Browser Support
+### No Data Appearing
 
-- Chrome (recommended)
-- Firefox
-- Safari
-- Edge
+```bash
+# Trigger the pipeline manually
+npm run setup:demo
+```
 
-## Performance
+### API Gateway Connection Issues
 
-The demo is optimized for:
+Check that the API Gateway is running on port 8080:
 
-- Fast initial load times
-- Smooth real-time updates
-- Responsive user interactions
-- Efficient data visualization
+```bash
+curl http://localhost:8080/health
+```
 
-## Contributing
+### Web App Not Loading
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+Make sure you're running the correct command:
 
-## License
+```bash
+# For full pipeline demo
+npm run dev:demo
 
-MIT License - see LICENSE file for details.
+# For mock data demo
+cd demo-web && npm run dev:with-mock
+```
+
+## 📚 Related Documentation
+
+- [API Gateway Documentation](../api-gateway/README.md)
+- [System Architecture](../ARCHITECTURE.md)
+- [Service Documentation](../services.md)

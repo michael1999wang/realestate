@@ -30,9 +30,10 @@
     "concurrently": "^8.2.2"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "vite",
     "dev:client": "vite",
     "dev:server": "tsx watch server/index.ts",
+    "dev:with-mock": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "setup": "npm install"

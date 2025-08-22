@@ -145,12 +145,12 @@ async function startServer(): Promise<void> {
       logger.warn("⚠️ Redis cache connection failed, continuing without cache");
     }
 
-    // Initialize service adapters
+    // Initialize service adapters (each connects to its own service database)
     logger.info("🏗️ Initializing service adapters...");
-    const listingsAdapter = new ListingsReadAdapter(dbPool);
-    const enrichmentAdapter = new EnrichmentReadAdapter(dbPool);
-    const underwritingClient = new UnderwritingServiceClient(dbPool);
-    const authAdapter = new SimpleAuthAdapter(dbPool);
+    const listingsAdapter = new ListingsReadAdapter(); // Uses serviceDatabases.ingestor
+    const enrichmentAdapter = new EnrichmentReadAdapter(); // Uses serviceDatabases.enrichment
+    const underwritingClient = new UnderwritingServiceClient(); // Uses serviceDatabases.underwriting
+    const authAdapter = new SimpleAuthAdapter(dbPool); // Uses API Gateway's own database
 
     // Initialize health check adapter
     const serviceUrls = {
